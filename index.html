@@ -311,8 +311,8 @@ var scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf6efe9);
 
 var camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 100);
-var camYaw = 0.52, camPitch = 0.68, camDist = 4.5;
-var camTarget = new THREE.Vector3(0, 0.8, -0.3);
+var camYaw = -0.78, camPitch = 0.68, camDist = 5.6;
+var camTarget = new THREE.Vector3(0, 0.65, -0.45);
 
 // 조명 (따뜻하고 몽글몽글한 실내)
 var hemi = new THREE.HemisphereLight(0xfffaf2, 0xe8d9ce, 1.15);
@@ -554,7 +554,7 @@ var bubbles = {}; // { id: { text, until } }
 function ensureChar(id, role, name) {
   if (chars[id]) return chars[id];
   var mesh = makeChar(role);
-  mesh.position.set(role === 'jungu' ? -0.3 : 0.3, 0, 0.2);
+  mesh.position.set(role === 'jungu' ? -0.35 : 0.25, 0, -0.85);
   scene.add(mesh);
 
   var el = document.createElement('div');
@@ -917,7 +917,7 @@ function handleCanvasTap(cx, cy) {
 }
 
 function resetCam() {
-  camYaw = 0.52; camPitch = 0.68; camDist = 4.5;
+  camYaw = -0.78; camPitch = 0.68; camDist = 5.6;
 }
 
 window.addEventListener('resize', function() {
