@@ -408,10 +408,10 @@ var floorTex = makeTex(512, 512, function(ctx, w, h) {
 var rugTex = makeTex(256, 256, function(ctx, w, h) {
   ctx.fillStyle = '#f2e9dc';
   ctx.fillRect(0, 0, w, h);
-  for (var i = 0; i < 2600; i++) {
+  for (var i = 0; i < 700; i++) {
     var x = Math.random() * w, y = Math.random() * h;
-    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.5)' : 'rgba(206,190,170,0.35)';
-    ctx.beginPath(); ctx.arc(x, y, 1 + Math.random() * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.45)' : 'rgba(214,199,180,0.28)';
+    ctx.beginPath(); ctx.arc(x, y, 1 + Math.random() * 1.6, 0, Math.PI * 2); ctx.fill();
   }
   ctx.strokeStyle = 'rgba(212,196,176,0.8)';
   ctx.lineWidth = 3;
@@ -637,8 +637,8 @@ addMesh(new THREE.PlaneGeometry(3.26, 1.32), glassMat, -0.10, 1.48, -2.98, scene
 addBox(3.44, 0.06, 0.24, WOOD, -0.10, 0.795, -2.84, scene, true);
 
 // 롤스크린 (그레이 2개 + 상단 하우징)
-addBox(1.46, 0.30, 0.10, 0xbfc1c0, -0.86, 1.98, -2.87, scene, false);
-addBox(1.46, 0.30, 0.10, 0xbfc1c0, 0.86, 1.98, -2.87, scene, false);
+addBox(1.46, 0.26, 0.09, 0xd2cfcb, -0.86, 2.00, -2.87, scene, false);
+addBox(1.46, 0.26, 0.09, 0xd2cfcb, 0.86, 2.00, -2.87, scene, false);
 var blindCase = addCyl(0.055, 0.055, 3.30, 0xaeadab, -0.10, 2.15, -2.87, scene, 16);
 blindCase.rotation.z = Math.PI / 2;
 var blindEdge = addCyl(0.012, 0.012, 1.46, 0x9fa1a0, -0.86, 1.83, -2.83, scene, 8);
@@ -715,6 +715,8 @@ addBox(2.02, 0.20, 1.34, 0xfdfcf9, -0.28, 0.42, -2.28, bedG, true);
 addBox(1.60, 0.12, 1.36, 0xfffdfa, -0.62, 0.55, -2.28, bedG, true);
 addSphere(0.62, 0.030, 0.62, 0xfffdfa, -0.62, 0.598, -2.62, bedG, 0.98);
 addSphere(0.52, 0.028, 0.52, 0xfffdfa, -0.30, 0.598, -1.94, bedG, 0.98);
+addSphere(0.80, 0.045, 0.075, 0xfffdfa, -0.62, 0.575, -1.62, bedG, 0.98); // 앞쪽 둥근 모서리
+addSphere(0.075, 0.045, 0.66, 0xfffdfa, -1.40, 0.575, -2.28, bedG, 0.98); // 발치 모서리
 // 이불 끝단이 살짝 흘러내린 느낌
 addBox(1.62, 0.05, 1.32, 0xfffdfa, -0.62, 0.505, -2.28, bedG, false);
 // 베개 2개 (오른쪽 머리맡)
@@ -823,18 +825,14 @@ addBox(0.07, 0.17, 0.30, 0xf7f2ea, 0.20, 0.50, -0.02, chairG, false);
 var sofaG = new THREE.Group();
 scene.add(sofaG);
 // 베이스 / 좌방석
-addBox(0.86, 0.30, 1.46, 0xf6efe4, 1.57, 0.22, -0.62, sofaG, true);
-addSphere(0.40, 0.11, 0.68, 0xfbf6ee, 1.50, 0.42, -0.98, sofaG, 0.96);
-addSphere(0.40, 0.11, 0.68, 0xfbf6ee, 1.50, 0.42, -0.28, sofaG, 0.96);
-// 등받이
-addBox(0.22, 0.56, 1.46, 0xf2ebdf, 1.91, 0.50, -0.62, sofaG, true);
-addSphere(0.13, 0.18, 0.66, 0xfaf5ec, 1.80, 0.52, -0.98, sofaG, 0.96);
-addSphere(0.13, 0.18, 0.66, 0xfaf5ec, 1.80, 0.52, -0.28, sofaG, 0.96);
-// 팔걸이
-addBox(0.84, 0.16, 0.14, 0xf2ebdf, 1.57, 0.34, -1.32, sofaG, true);
-addBox(0.84, 0.16, 0.14, 0xf2ebdf, 1.57, 0.34, 0.08, sofaG, true);
-addSphere(0.12, 0.09, 0.08, 0xfbf6ee, 1.20, 0.40, -1.32, sofaG, 0.96);
-addSphere(0.12, 0.09, 0.08, 0xfbf6ee, 1.20, 0.40, 0.08, sofaG, 0.96);
+addBox(0.86, 0.26, 1.50, 0xf3ede2, 1.57, 0.19, -0.62, sofaG, true); // 하부 프레임
+addBox(0.72, 0.15, 0.68, 0xfcf8f1, 1.52, 0.39, -0.99, sofaG, true); // 좌방석 1
+addBox(0.72, 0.15, 0.68, 0xfcf8f1, 1.52, 0.39, -0.27, sofaG, true); // 좌방석 2
+addBox(0.20, 0.54, 1.50, 0xf1eadf, 1.92, 0.50, -0.62, sofaG, true); // 등판
+addBox(0.16, 0.36, 0.66, 0xfbf6ee, 1.80, 0.62, -0.99, sofaG, true); // 등쿠션 1
+addBox(0.16, 0.36, 0.66, 0xfbf6ee, 1.80, 0.62, -0.27, sofaG, true); // 등쿠션 2
+addBox(0.86, 0.22, 0.13, 0xf1eadf, 1.57, 0.41, -1.31, sofaG, true); // 팔걸이
+addBox(0.86, 0.22, 0.13, 0xf1eadf, 1.57, 0.41, 0.08, sofaG, true);
 // 다리
 addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.24, 0.05, -1.26, sofaG, 8);
 addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.24, 0.05, 0.02, sofaG, 8);
@@ -900,11 +898,11 @@ var tableRim = addMesh(new THREE.TorusGeometry(0.555, 0.022, 8, 44), mat(0xf7f1e
 tableRim.rotation.x = Math.PI / 2;
 tableRim.scale.set(1, 0.72, 1);
 // 우드 V자 다리
-var legA = addBox(0.055, 0.42, 0.13, 0xd2a878, 0, 0.19, 0.12, tableG, true);
-legA.rotation.x = 0.30;
-var legB = addBox(0.055, 0.42, 0.13, 0xd2a878, 0, 0.19, -0.12, tableG, true);
-legB.rotation.x = -0.30;
-addBox(0.06, 0.06, 0.30, 0xd2a878, 0, 0.36, 0, tableG, false);
+var legA = addBox(0.055, 0.34, 0.12, 0xd2a878, 0, 0.17, 0.13, tableG, true);
+legA.rotation.x = 0.34;
+var legB = addBox(0.055, 0.34, 0.12, 0xd2a878, 0, 0.17, -0.13, tableG, true);
+legB.rotation.x = -0.34;
+addBox(0.05, 0.05, 0.22, 0xd2a878, 0, 0.30, 0, tableG, false);
 // 테이블 위 소품: 꽃병 + 캔들
 addCyl(0.035, 0.028, 0.09, 0xe7eef0, -0.10, 0.42, 0.02, tableG, 12);
 addCyl(0.004, 0.004, 0.13, 0x6f8c5e, -0.10, 0.52, 0.02, tableG, 6);
@@ -1074,10 +1072,12 @@ function toggleTV() {
 
 // TV 아래 화이트 2단 서랍장
 addBox(0.64, 0.62, 0.38, 0xfbf8f2, 1.28, 0.31, 0.40, scene, true);
-addBox(0.60, 0.26, 0.02, 0xf1ebe2, 1.28, 0.44, 0.215, scene, false);
-addBox(0.60, 0.26, 0.02, 0xf1ebe2, 1.28, 0.16, 0.215, scene, false);
-addCyl(0.035, 0.035, 0.02, 0xf0e9df, 1.16, 0.44, 0.20, scene, 12).rotation.x = Math.PI / 2;
-addCyl(0.035, 0.035, 0.02, 0xf0e9df, 1.16, 0.16, 0.20, scene, 12).rotation.x = Math.PI / 2;
+addBox(0.60, 0.25, 0.02, 0xf8f4ec, 1.28, 0.445, 0.213, scene, false);
+addBox(0.60, 0.25, 0.02, 0xf8f4ec, 1.28, 0.165, 0.213, scene, false);
+addBox(0.62, 0.014, 0.01, 0xd6c9b8, 1.28, 0.305, 0.212, scene, false);
+addBox(0.62, 0.014, 0.01, 0xd6c9b8, 1.28, 0.028, 0.212, scene, false);
+addCyl(0.022, 0.022, 0.022, 0xd9c3a8, 1.18, 0.445, 0.20, scene, 12).rotation.x = Math.PI / 2;
+addCyl(0.022, 0.022, 0.022, 0xd9c3a8, 1.18, 0.165, 0.20, scene, 12).rotation.x = Math.PI / 2;
 // 2단 오픈 선반
 addBox(0.60, 0.42, 0.26, 0xfbf8f2, 1.28, 0.85, 0.46, scene, true);
 addBox(0.56, 0.02, 0.24, 0xf1ebe2, 1.28, 0.86, 0.46, scene, false);
@@ -1151,9 +1151,9 @@ scene.add(lampG);
 addCyl(0.16, 0.17, 0.025, 0x1f1f21, 0, 0.012, 0, lampG, 20);
 addCyl(0.016, 0.016, 1.68, 0x232325, 0, 0.86, 0, lampG, 10);
 var shadeMat = new THREE.MeshStandardMaterial({
-  color: 0xfff3dd, emissive: 0xffd9a0, emissiveIntensity: 0.85, roughness: 0.7, side: THREE.DoubleSide
+  color: 0xfff3dd, emissive: 0xffd9a0, emissiveIntensity: 0.55, roughness: 0.8, side: THREE.DoubleSide
 });
-var shade = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.10, 0.18, 26, 1, true), shadeMat);
+var shade = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.085, 0.15, 26, 1, true), shadeMat);
 shade.position.set(0, 1.70, 0);
 lampG.add(shade);
 addSphere(0.05, 0.05, 0.05, 0xfff0d0, 0, 1.62, 0, lampG, 0.4);
