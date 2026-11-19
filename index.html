@@ -386,11 +386,11 @@ var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHei
 function camDefault() {
   var asp = window.innerWidth / window.innerHeight;
   if (asp < 0.85) {
-    camera.fov = 66;
-    camYaw = 0.04; camPitch = 1.02; camDist = 8.6;
+    camera.fov = 68;
+    camYaw = 0.04; camPitch = 0.98; camDist = 8.2;
   } else {
-    camera.fov = 52;
-    camYaw = 0.04; camPitch = 1.00; camDist = 7.2;
+    camera.fov = 54;
+    camYaw = 0.04; camPitch = 0.92; camDist = 6.8;
   }
   camera.updateProjectionMatrix();
 }
@@ -1161,7 +1161,7 @@ scene.add(rug);
 // 화이트 조약돌 테이블
 var __mTable = scene.children.length;
 var tableG = new THREE.Group();
-tableG.position.set(-0.48, 0, -0.55);
+tableG.position.set(-0.78, 0, -0.55);
 scene.add(tableG);
 var topGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.045, 44);
 var tableTop = addMesh(topGeo, mat(0xf4ede2, 0.55), 0, 0.355, 0, tableG);
@@ -1184,7 +1184,7 @@ addSphere(0.022, 0.020, 0.022, 0xd8e5c8, -0.10, 0.56, -0.03, tableG, 0.9);
 addCyl(0.038, 0.038, 0.055, 0xf0e4d0, 0.14, 0.405, -0.02, tableG, 14);
 addSphere(0.011, 0.016, 0.011, 0xffc98a, 0.14, 0.44, -0.02, tableG, 0.5);
 
-var tableWrap = wrapFurniture('소파 테이블', -0.48, -0.55, scene.children.slice(__mTable));
+var tableWrap = wrapFurniture('소파 테이블', -0.78, -0.55, scene.children.slice(__mTable));
 
 // ================== 왼쪽 벽 붙박이장 (창가까지) ==================
 var closetG = new THREE.Group();
@@ -1428,7 +1428,7 @@ var dresserWrap = registerFurniture('TV 서랍장', dresserG);
 
 // 우드 상판 스트라이프 천 트롤리
 var trolleyG = new THREE.Group();
-trolleyG.position.set(0.40, 0, 0.58);
+trolleyG.position.set(0.80, 0, 0.62);
 scene.add(trolleyG);
 addRBox(0.40, 0.04, 0.36, 0.02, mat(0xd7ab78, 0.8), 0, 0.74, 0, trolleyG, true);
 addRBox(0.38, 0.56, 0.34, 0.03, mat(0xfbf8f2, 0.85), 0, 0.44, 0, trolleyG, true);
@@ -1457,7 +1457,7 @@ registerFurniture('트롤리', trolleyG);
 
 // 화이트 스탠드 서큘레이터
 var fanG = new THREE.Group();
-fanG.position.set(0.80, 0, 0.60);
+fanG.position.set(1.50, 0, -2.28);
 scene.add(fanG);
 addCyl(0.16, 0.17, 0.03, 0xf6f4f0, 0, 0.02, 0, fanG, 20);
 addCyl(0.045, 0.045, 0.52, 0xf8f6f2, 0, 0.28, 0, fanG, 12);
@@ -1477,7 +1477,7 @@ addBox(0.22, 0.16, 0.10, 0xf8f6f2, 0, -0.14, -0.12, fanHead, false);
 
 // 블랙 플로어 스탠드 조명 (따뜻한 불빛)
 var lampG = new THREE.Group();
-lampG.position.set(0.05, 0, 0.62);
+lampG.position.set(1.58, 0, -2.64);
 scene.add(lampG);
 addCyl(0.16, 0.17, 0.025, 0x1f1f21, 0, 0.012, 0, lampG, 20);
 addCyl(0.016, 0.016, 1.68, 0x232325, 0, 0.86, 0, lampG, 10);
@@ -2582,12 +2582,12 @@ blk(1.30, -1.40, 1.96, -0.66);
 // 소파 · 스툴 · 테이블
 blk(1.66, -0.47, 2.60, 0.82);
 blk(0.70, -0.32, 1.16, 0.16);
-blk(-1.08, -0.98, 0.12, -0.14);
+blk(-1.36, -0.98, -0.20, -0.14);
 // TV 존 (서랍장 · 트롤리 · 서큘레이터 · 램프)
 blk(0.96, 0.40, 1.66, 0.80);
-blk(0.18, 0.38, 0.64, 0.80);
-blk(0.62, 0.42, 0.98, 0.80);
-blk(-0.12, 0.44, 0.22, 0.80);
+blk(0.58, 0.42, 1.02, 0.84);
+blk(1.30, -2.46, 1.70, -2.10);
+blk(1.38, -2.84, 1.78, -2.44);
 // 화장실 벽
 blk(0.49, 0.74, 2.60, 0.87);       // TV 가벽
 blk(0.49, 0.80, 0.62, 1.53);       // 서쪽 벽 (문 앞)
@@ -2657,8 +2657,8 @@ function buildStations() {
   ] });
   station({ id: 'table', name: '소파 테이블', g: tableWrap, reach: 1.4, acts: [
     { id: 'eat', label: '🍚 밥먹기', fx: 'eat', sound: 'nom', slots: [
-      { x: 0.30, z: -0.55, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
-      { x: -1.26, z: -0.55, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
+      { x: 0.02, z: -0.55, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
+      { x: -1.58, z: -0.55, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
     ] }
   ] });
   station({ id: 'coffee', name: '커피머신', g: rollG, acts: [
