@@ -307,12 +307,12 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.06;
+renderer.toneMappingExposure = 1.0;
 
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf1e7de);
 
-var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 480);
+var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 3000);
 var camYaw = -0.28, camPitch = 0.85, camDist = 5.6;
 var camTarget = new THREE.Vector3(0, 0.60, -0.30);
 
@@ -320,7 +320,7 @@ var camTarget = new THREE.Vector3(0, 0.60, -0.30);
 var hemi = new THREE.HemisphereLight(0xfff8f0, 0xe2d2c4, 1.15);
 scene.add(hemi);
 
-var sun = new THREE.DirectionalLight(0xffe4c0, 1.55);
+var sun = new THREE.DirectionalLight(0xffe2b8, 1.75);
 sun.position.set(-1.0, 5.6, -7.6);
 sun.castShadow = true;
 sun.shadow.mapSize.set(1024, 1024);
@@ -331,7 +331,11 @@ sun.shadow.camera.top = 6; sun.shadow.camera.bottom = -6;
 sun.shadow.bias = -0.0007;
 scene.add(sun);
 
-var roomLight = new THREE.PointLight(0xffe8ca, 0.55, 12, 2);
+var winGlow = new THREE.PointLight(0xffe9d0, 0.55, 7, 2);
+winGlow.position.set(-0.4, 1.55, -2.35);
+scene.add(winGlow);
+
+var roomLight = new THREE.PointLight(0xffe8ca, 0.5, 12, 2);
 roomLight.position.set(-0.2, 2.2, -1.0);
 scene.add(roomLight);
 
@@ -657,13 +661,13 @@ blindEdge.rotation.z = Math.PI / 2;
 var city = new THREE.Group();
 scene.add(city);
 // 하늘 (아주 먼 배경)
-var sky = new THREE.Mesh(new THREE.PlaneGeometry(420, 140), new THREE.MeshBasicMaterial({ map: skyTex }));
-sky.position.set(-6, 12, -180);
+var sky = new THREE.Mesh(new THREE.PlaneGeometry(2600, 900), new THREE.MeshBasicMaterial({ map: skyTex }));
+sky.position.set(-40, 110, -1300);
 city.add(sky);
 // 지면 (고층에서 내려다보는 거리)
-var ground = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), mat(0xc6cabc, 1));
+var ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), mat(0xc6cabc, 1));
 ground.rotation.x = -Math.PI / 2;
-ground.position.set(0, -34, -70);
+ground.position.set(0, -34, -600);
 city.add(ground);
 // 대로 (남북) + 교차로
 var road = new THREE.Mesh(new THREE.PlaneGeometry(30, 420), mat(0x8e9195, 1));
@@ -690,17 +694,23 @@ for (var bi = 0; bi < 18; bi++) {
   addMesh(new THREE.BoxGeometry(bw, bh, bw * 0.8), texMat(nearMats[bi % 3], 0.95), bx, -34 + bh / 2, bz, city, false);
 }
 // 먼 아파트 단지 (수평선 위로 솟은 고층)
-for (var di = 0; di < 34; di++) {
-  var dw = 6 + Math.random() * 7;
-  var dh = 34 + Math.random() * 28;
-  var dx = -150 + Math.random() * 300;
-  var dz = -95 - Math.random() * 110;
+for (var di = 0; di < 46; di++) {
+  var dw = 10 + Math.random() * 14;
+  var dh = 42 + Math.random() * 46;
+  var dx = -420 + Math.random() * 840;
+  var dz = -320 - Math.random() * 480;
   addMesh(new THREE.BoxGeometry(dw, dh, dw * 0.75), texMat(nearMats[di % 3], 0.95), dx, -34 + dh / 2, dz, city, false);
 }
+// 가까운 고층 오피스 (아래로 비스듬히)
+for (var oi = 0; oi < 8; oi++) {
+  var ow = 14 + Math.random() * 10;
+  var oh = 26 + Math.random() * 20;
+  addMesh(new THREE.BoxGeometry(ow, oh, ow), texMat(nearMats[oi % 3], 0.95), -70 - oi * 16 + Math.random() * 10, -34 + oh / 2, -70 - oi * 22, city, false);
+}
 // 먼 산 (노을에 물든)
-addSphere(70, 16, 30, 0xb9bcb0, -110, -30, -190, city);
-addSphere(90, 20, 34, 0xc0c2b6, 70, -28, -210, city);
-addSphere(50, 12, 26, 0xb3b8ac, 150, -32, -175, city);
+addSphere(240, 42, 90, 0xb9bcb0, -420, -46, -900, city);
+addSphere(300, 52, 100, 0xc0c2b6, 260, -40, -980, city);
+addSphere(180, 32, 70, 0xb3b8ac, 620, -52, -820, city);
 
 // ================== 침대 (창가 · 우드 서랍형) ==================
 var bedG = new THREE.Group();
@@ -716,10 +726,8 @@ addBox(0.10, 0.03, 0.03, 0xb98a5d, 0.30, 0.17, -1.565, bedG, false);
 addBox(2.02, 0.20, 1.34, 0xfdfcf9, -0.28, 0.42, -2.28, bedG, true);
 // 이불 (몽글몽글)
 addBox(1.60, 0.12, 1.36, 0xfffdfa, -0.62, 0.55, -2.28, bedG, true);
-for (var bi2 = 0; bi2 < 8; bi2++) {
-  addSphere(0.19 + Math.random() * 0.08, 0.026, 0.34, 0xfffdfa,
-    -1.26 + bi2 * 0.18, 0.605, -2.28 + (bi2 % 2 ? 0.30 : -0.30), bedG, 0.98);
-}
+addSphere(0.62, 0.030, 0.62, 0xfffdfa, -0.62, 0.598, -2.62, bedG, 0.98);
+addSphere(0.52, 0.028, 0.52, 0xfffdfa, -0.30, 0.598, -1.94, bedG, 0.98);
 // 이불 끝단이 살짝 흘러내린 느낌
 addBox(1.62, 0.05, 1.32, 0xfffdfa, -0.62, 0.505, -2.28, bedG, false);
 // 베개 2개 (오른쪽 머리맡)
@@ -814,13 +822,15 @@ for (var ci2 = 0; ci2 < 5; ci2++) {
   addSphere(0.028, 0.028, 0.025, 0x3d3f45, Math.cos(ang) * 0.30, 0.028, Math.sin(ang) * 0.30, chairG, 0.5);
 }
 addCyl(0.045, 0.045, 0.30, 0xdadcde, 0, 0.20, 0, chairG, 10);
-addSphere(0.24, 0.09, 0.23, 0xf7f2ea, 0, 0.40, 0.01, chairG, 0.98); // 좌방석
-addSphere(0.21, 0.20, 0.10, 0xf9f5ee, 0, 0.60, -0.20, chairG, 0.98); // 등받이
-addCyl(0.055, 0.055, 0.06, 0xf3ede4, 0, 0.79, -0.20, chairG, 12);   // 목 지지
-var headrest = addCyl(0.085, 0.085, 0.30, 0xf9f5ee, 0, 0.85, -0.20, chairG, 14);
+addBox(0.46, 0.11, 0.42, 0xf7f2ea, 0, 0.415, 0.02, chairG, false); // 좌방석
+addBox(0.44, 0.06, 0.40, 0xfbf7f1, 0, 0.47, 0.02, chairG, false);    // 방석 쿠션
+var chairBack = addBox(0.42, 0.32, 0.10, 0xf9f5ee, 0, 0.61, -0.20, chairG, false); // 등받이
+chairBack.rotation.x = -0.12;
+addCyl(0.05, 0.05, 0.07, 0xf3ede4, 0, 0.77, -0.20, chairG, 12);       // 목 지지
+var headrest = addCyl(0.075, 0.075, 0.30, 0xf9f5ee, 0, 0.83, -0.21, chairG, 14);
 headrest.rotation.z = Math.PI / 2;
-addSphere(0.10, 0.075, 0.10, 0xf7f2ea, -0.16, 0.53, 0.02, chairG, 0.98);
-addSphere(0.10, 0.075, 0.10, 0xf7f2ea, 0.16, 0.53, 0.02, chairG, 0.98);
+addBox(0.07, 0.17, 0.30, 0xf7f2ea, -0.20, 0.50, -0.02, chairG, false); // 팔걸이
+addBox(0.07, 0.17, 0.30, 0xf7f2ea, 0.20, 0.50, -0.02, chairG, false);
 
 // ================== 소파 (아이보리 2인용) + 치이카와 쿠션 ==================
 var sofaG = new THREE.Group();
