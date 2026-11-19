@@ -311,6 +311,7 @@ renderer.toneMappingExposure = 1.0;
 
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf1e7de);
+scene.fog = new THREE.Fog(0xe9dccb, 26, 950);
 
 var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 3000);
 var camYaw = -0.28, camPitch = 0.85, camDist = 5.6;
@@ -661,7 +662,7 @@ blindEdge.rotation.z = Math.PI / 2;
 var city = new THREE.Group();
 scene.add(city);
 // 하늘 (아주 먼 배경)
-var sky = new THREE.Mesh(new THREE.PlaneGeometry(2600, 900), new THREE.MeshBasicMaterial({ map: skyTex }));
+var sky = new THREE.Mesh(new THREE.PlaneGeometry(2600, 900), new THREE.MeshBasicMaterial({ map: skyTex, fog: false }));
 sky.position.set(-40, 110, -1300);
 city.add(sky);
 // 지면 (고층에서 내려다보는 거리)
@@ -687,10 +688,10 @@ for (var ti = 0; ti < 26; ti++) {
 // 대로변 상가 · 오피스
 var nearMats = [facadeA, facadeB, facadeC];
 for (var bi = 0; bi < 18; bi++) {
-  var bw = 7 + Math.random() * 10;
-  var bh = 9 + Math.random() * 15;
-  var bx = (bi % 2 ? 1 : -1) * (24 + Math.random() * 28);
-  var bz = -14 - Math.random() * 34;
+  var bw = 8 + Math.random() * 12;
+  var bh = 9 + Math.random() * 16;
+  var bx = (bi % 2 ? 1 : -1) * (46 + Math.random() * 46);
+  var bz = -26 - Math.random() * 56;
   addMesh(new THREE.BoxGeometry(bw, bh, bw * 0.8), texMat(nearMats[bi % 3], 0.95), bx, -34 + bh / 2, bz, city, false);
 }
 // 먼 아파트 단지 (수평선 위로 솟은 고층)
