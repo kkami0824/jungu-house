@@ -371,17 +371,17 @@ var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHei
 function camDefault() {
   var asp = window.innerWidth / window.innerHeight;
   if (asp < 0.85) {
-    camera.fov = 64;
-    camYaw = 0.06; camPitch = 0.98; camDist = 7.4;
+    camera.fov = 66;
+    camYaw = 0.04; camPitch = 1.02; camDist = 8.6;
   } else {
-    camera.fov = 50;
-    camYaw = 0.06; camPitch = 0.95; camDist = 5.8;
+    camera.fov = 52;
+    camYaw = 0.04; camPitch = 1.00; camDist = 7.2;
   }
   camera.updateProjectionMatrix();
 }
 var camYaw = 0.10, camPitch = 0.80, camDist = 5.2;
 camDefault();
-var camTarget = new THREE.Vector3(0, 0.60, -0.30);
+var camTarget = new THREE.Vector3(0, 0.55, -0.45);
 
 // ================== 조명 (따뜻한 크림빛 실내 + 노을 창빛) ==================
 var hemi = new THREE.HemisphereLight(0xfff8f0, 0xe2d2c4, 1.15);
@@ -413,6 +413,7 @@ scene.add(ceilLight);
 var ceilPanelMat = new THREE.MeshStandardMaterial({ color: 0xfffdf8, emissive: 0xfff6ea, emissiveIntensity: 0.85, roughness: 0.5 });
 var ceilPanel = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.02, 0.62), ceilPanelMat);
 ceilPanel.position.set(-0.2, 2.36, -0.9);
+ceilPanel.visible = false;   // 천장 등 덩어리는 화면에 안 보이게 (빛은 그대로)
 scene.add(ceilPanel);
 
 // 책상 무드등 (주황)
@@ -709,11 +710,81 @@ var photoTexes = [];
   }
 })();
 
+// ================== 둥글둥글 · 포근한 패브릭 헬퍼 ==================
+function roundedRectShape(w, h, r) {
+  var s = new THREE.Shape();
+  var x = -w / 2, y = -h / 2;
+  r = Math.max(0.002, Math.min(r, w / 2 - 0.002, h / 2 - 0.002));
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+// 모서리가 둥근 박스 (bevel)
+function rboxGeo(w, h, d, r) {
+  var b = Math.min(r * 0.9, w / 2 - 0.003, h / 2 - 0.003, d / 2 - 0.003);
+  var geo = new THREE.ExtrudeGeometry(roundedRectShape(w - 2 * b, h - 2 * b, Math.max(0.004, r - b)), {
+    depth: Math.max(0.004, d - 2 * b), bevelEnabled: true, bevelThickness: b, bevelSize: b * 0.92,
+    bevelSegments: 3, curveSegments: 5, steps: 1
+  });
+  geo.center();
+  geo.computeVertexNormals();
+  return geo;
+}
+function addRBox(w, h, d, r, material, x, y, z, parent, stick) {
+  return addMesh(rboxGeo(w, h, d, r), material, x, y, z, parent, stick);
+}
+function rBox(w, h, d, r, color, x, y, z, parent, stick, rough) {
+  return addRBox(w, h, d, r, mat(color, rough === undefined ? 0.9 : rough), x, y, z, parent, stick);
+}
+// 천 · 부클레 · 니트 질감 (알갱이가 잘아서 UV 늘어나도 티가 안 남)
+function clothTex(base, light, dark, grain, knots) {
+  return makeTex(256, 256, function(ctx, w, h) {
+    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
+    for (var i = 0; i < grain; i++) {
+      ctx.fillStyle = Math.random() > 0.45 ? light : dark;
+      ctx.beginPath();
+      ctx.arc(Math.random() * w, Math.random() * h, 0.6 + Math.random() * 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (var k = 0; k < knots; k++) {
+      ctx.strokeStyle = Math.random() > 0.5 ? light : dark;
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      var cx2 = Math.random() * w, cy2 = Math.random() * h, rr = 1.3 + Math.random() * 2.1;
+      ctx.arc(cx2, cy2, rr, Math.random() * 6, Math.random() * 6 + 2.4);
+      ctx.stroke();
+    }
+  }, 6, 6);
+}
+var duvetTex = clothTex('#fdfaf5', 'rgba(255,255,255,0.85)', 'rgba(224,212,197,0.5)', 1500, 120);
+var boucleTex = clothTex('#fbf5ec', 'rgba(255,255,255,0.9)', 'rgba(224,210,194,0.5)', 1600, 210);
+var knitTex = clothTex('#f0e2cf', 'rgba(255,255,255,0.8)', 'rgba(202,182,158,0.55)', 1200, 70);
+var cottonTex = clothTex('#fffdf9', 'rgba(255,255,255,0.9)', 'rgba(226,217,206,0.42)', 1400, 60);
+function fabricMat(tex, rough, bump) {
+  return new THREE.MeshStandardMaterial({ map: tex, bumpMap: tex, bumpScale: bump || 0.006, roughness: rough || 0.96, metalness: 0 });
+}
+var duvetMat = fabricMat(duvetTex, 0.97, 0.008);
+var boucleMat = fabricMat(boucleTex, 0.98, 0.007);
+var knitMat = fabricMat(knitTex, 0.99, 0.010);
+var cottonMat = fabricMat(cottonTex, 0.95, 0.005);
+
 // ================== 방 크기 ==================
-// X: -2.0 ~ +2.0 (4.0m) / Z: -3.0 ~ +3.0 (6.0m) / 벽높이 2.42m
-var RW = 4.0, RD = 6.0, RH = 2.42;
+// X: -2.6 ~ +2.6 (5.2m) / Z: -3.0 ~ +3.0 (6.0m) / 벽높이 2.42m
+var RW = 5.2, RD = 6.0, RH = 2.42;
+var HX = RW / 2;
+var IN_W = -HX + 0.06, IN_E = HX - 0.06;   // 좌/우 벽 안쪽 면 (-2.54 / 2.54)
+var IN_N = -RD / 2 + 0.06, IN_S = RD / 2 - 0.06;
 var WALL = 0xf8f1e9, WALL2 = 0xf6eee5;
 var WOOD = 0xd3a97c, WOOD_D = 0xb98a5d, CREAM = 0xf3e7d8, WHITE = 0xfdfbf7;
+
+floorTex.repeat.set(2.6, 4.0);
 
 // 바닥
 addBox(RW, 0.10, RD, 0xf0e0cd, 0, -0.05, 0, scene, false);
@@ -723,47 +794,46 @@ floorTop.position.set(0, 0.002, 0);
 floorTop.receiveShadow = true;
 scene.add(floorTop);
 
-// 벽 (왼쪽 = 붙박이장 벽, 오른쪽 = 소파 벽)
-addBox(0.10, RH, RD, WALL, -2.02, RH / 2, 0, scene, true);
-addBox(0.10, RH, RD, WALL, 2.02, RH / 2, 0, scene, true);
+// 벽 (왼쪽 = 붙박이장·주방 벽, 오른쪽 = 책상·소파 벽)
+addBox(0.10, RH, RD, WALL, -HX - 0.02, RH / 2, 0, scene, true);
+addBox(0.10, RH, RD, WALL, HX + 0.02, RH / 2, 0, scene, true);
 // 걸레받이
-addBox(0.04, 0.09, RD, 0xf0e6da, -1.96, 0.045, 0, scene, false);
-addBox(0.04, 0.09, RD, 0xf0e6da, 1.96, 0.045, 0, scene, false);
+addBox(0.04, 0.09, RD, 0xf0e6da, IN_W + 0.02, 0.045, 0, scene, false);
+addBox(0.04, 0.09, RD, 0xf0e6da, IN_E - 0.02, 0.045, 0, scene, false);
 
 // ================== 창가 (북쪽 벽 Z = -3.0) ==================
-// 창 개구부: X -1.75 ~ +1.55, Y 0.80 ~ 2.16
+// 창 개구부: X -2.30 ~ +2.10, Y 0.80 ~ 2.16
 addBox(RW, 0.80, 0.10, WALL, 0, 0.40, -3.0, scene, true);
 addBox(RW, RH - 2.16, 0.10, WALL, 0, (RH + 2.16) / 2, -3.0, scene, true);
-addBox(0.25, 1.36, 0.10, WALL, -1.875, 1.48, -3.0, scene, true);
-addBox(0.45, 1.36, 0.10, WALL, 1.775, 1.48, -3.0, scene, true);
+addBox(0.30, 1.36, 0.10, WALL, -2.45, 1.48, -3.0, scene, true);
+addBox(0.50, 1.36, 0.10, WALL, 2.35, 1.48, -3.0, scene, true);
 
 // 창틀 (원목)
 var wt = 0.055;
-addBox(3.36, wt, 0.13, WOOD, -0.10, 2.16, -2.97, scene, false);
-addBox(3.36, wt, 0.13, WOOD, -0.10, 0.80, -2.97, scene, false);
-addBox(wt, 1.36, 0.13, WOOD, -1.78, 1.48, -2.97, scene, false);
-addBox(wt, 1.36, 0.13, WOOD, 1.58, 1.48, -2.97, scene, false);
+addBox(4.40, wt, 0.13, WOOD, -0.10, 2.16, -2.97, scene, false);
+addBox(4.40, wt, 0.13, WOOD, -0.10, 0.80, -2.97, scene, false);
+addBox(wt, 1.36, 0.13, WOOD, -2.28, 1.48, -2.97, scene, false);
+addBox(wt, 1.36, 0.13, WOOD, 2.08, 1.48, -2.97, scene, false);
 // 창틀 기둥 + 가로대 (상단 큰 창 / 하단 작은 창)
 addBox(0.075, 1.36, 0.11, WOOD, 0.02, 1.48, -2.97, scene, false);
-addBox(3.30, 0.05, 0.11, WOOD, -0.10, 1.03, -2.97, scene, false);
+addBox(4.34, 0.05, 0.11, WOOD, -0.10, 1.03, -2.97, scene, false);
 addBox(0.035, 0.23, 0.09, WOOD, -0.86, 0.915, -2.97, scene, false);
 addBox(0.035, 0.23, 0.09, WOOD, 0.86, 0.915, -2.97, scene, false);
 // 창 유리
 var glassMat = new THREE.MeshStandardMaterial({
   color: 0xe6f3ff, transparent: true, opacity: 0.16, roughness: 0.06, metalness: 0.2
 });
-addMesh(new THREE.PlaneGeometry(3.26, 1.32), glassMat, -0.10, 1.48, -2.98, scene, false);
+addMesh(new THREE.PlaneGeometry(4.30, 1.32), glassMat, -0.10, 1.48, -2.98, scene, false);
 // 창틀 선반 (인형 놓는 넓은 우드 턱)
-addBox(3.44, 0.06, 0.24, WOOD, -0.10, 0.795, -2.84, scene, true);
+addBox(4.48, 0.06, 0.24, WOOD, -0.10, 0.795, -2.84, scene, true);
 
 // 롤스크린 (그레이 2개 + 상단 하우징)
-addBox(1.46, 0.26, 0.09, 0xd2cfcb, -0.86, 2.00, -2.87, scene, false);
-addBox(1.46, 0.26, 0.09, 0xd2cfcb, 0.86, 2.00, -2.87, scene, false);
-var blindCase = addCyl(0.055, 0.055, 3.30, 0xaeadab, -0.10, 2.15, -2.87, scene, 16);
+addBox(1.98, 0.26, 0.09, 0xd2cfcb, -1.12, 2.00, -2.87, scene, false);
+addBox(1.98, 0.26, 0.09, 0xd2cfcb, 0.92, 2.00, -2.87, scene, false);
+var blindCase = addCyl(0.055, 0.055, 4.34, 0xaeadab, -0.10, 2.15, -2.87, scene, 16);
 blindCase.rotation.z = Math.PI / 2;
-var blindEdge = addCyl(0.012, 0.012, 1.46, 0x9fa1a0, -0.86, 1.83, -2.83, scene, 8);
+var blindEdge = addCyl(0.012, 0.012, 1.98, 0x9fa1a0, -1.12, 1.83, -2.83, scene, 8);
 blindEdge.rotation.z = Math.PI / 2;
-
 // ================== 창밖 시티뷰 (동천역 대로변 · 노을) ==================
 var city = new THREE.Group();
 scene.add(city);
@@ -853,40 +923,42 @@ addSphere(240, 42, 90, 0xb9bcb0, -420, -46, -900, city);
 addSphere(300, 52, 100, 0xc0c2b6, 260, -40, -980, city);
 addSphere(180, 32, 70, 0xb3b8ac, 620, -52, -820, city);
 
-// ================== 침대 (창가 · 우드 서랍형) ==================
-var __mBed = scene.children.length;
+// ================== 침대 (창가 · 폭신 이불) ==================
 var bedG = new THREE.Group();
+bedG.position.set(-0.28, 0, -2.28);
 scene.add(bedG);
-// 서랍형 프레임
-addBox(2.06, 0.32, 1.38, 0xc9a074, -0.28, 0.16, -2.28, bedG, true);
+// 서랍형 프레임 (둥근 모서리)
+addRBox(2.06, 0.34, 1.38, 0.07, mat(0xc9a074, 0.75), 0, 0.17, 0, bedG, true);
 // 서랍 2칸 (앞면)
-addBox(0.94, 0.22, 0.03, 0xd9b58d, -0.80, 0.17, -1.585, bedG, false);
-addBox(0.94, 0.22, 0.03, 0xd9b58d, 0.30, 0.17, -1.585, bedG, false);
-addBox(0.10, 0.03, 0.03, 0xb98a5d, -0.80, 0.17, -1.565, bedG, false);
-addBox(0.10, 0.03, 0.03, 0xb98a5d, 0.30, 0.17, -1.565, bedG, false);
-// 매트리스 + 화이트 이불
-addBox(2.02, 0.20, 1.34, 0xfdfcf9, -0.28, 0.42, -2.28, bedG, true);
-// 이불 (몽글몽글)
-addBox(1.60, 0.12, 1.36, 0xfffdfa, -0.62, 0.55, -2.28, bedG, true);
-addSphere(0.62, 0.030, 0.62, 0xfffdfa, -0.62, 0.598, -2.62, bedG, 0.98);
-addSphere(0.52, 0.028, 0.52, 0xfffdfa, -0.30, 0.598, -1.94, bedG, 0.98);
-addSphere(0.80, 0.045, 0.075, 0xfffdfa, -0.62, 0.575, -1.62, bedG, 0.98); // 앞쪽 둥근 모서리
-addSphere(0.075, 0.045, 0.66, 0xfffdfa, -1.40, 0.575, -2.28, bedG, 0.98); // 발치 모서리
+addRBox(0.92, 0.20, 0.03, 0.02, mat(0xd9b58d, 0.8), -0.52, 0.17, 0.675, bedG, false);
+addRBox(0.92, 0.20, 0.03, 0.02, mat(0xd9b58d, 0.8), 0.58, 0.17, 0.675, bedG, false);
+addRBox(0.11, 0.03, 0.03, 0.012, mat(0xb98a5d, 0.7), -0.52, 0.17, 0.695, bedG, false);
+addRBox(0.11, 0.03, 0.03, 0.012, mat(0xb98a5d, 0.7), 0.58, 0.17, 0.695, bedG, false);
+// 매트리스 (솜이불 느낌)
+addRBox(2.00, 0.22, 1.32, 0.07, cottonMat, 0, 0.45, 0, bedG, true);
+// 이불 (부풀어 오른 볼륨 + 둥근 모서리)
+addRBox(1.60, 0.17, 1.40, 0.075, duvetMat, -0.34, 0.575, 0, bedG, true);
+addSphere(0.72, 0.055, 0.60, 0xffffff, -0.72, 0.635, -0.28, bedG, 0.99);
+addSphere(0.66, 0.05, 0.55, 0xffffff, -0.30, 0.645, 0.26, bedG, 0.99);
+addSphere(0.60, 0.045, 0.50, 0xffffff, -0.02, 0.635, -0.10, bedG, 0.99);
+// 이불 윗단을 살짝 접어 올린 롤
+var duvetRoll = addCyl(0.062, 0.062, 1.34, 0xfdfaf4, 0.44, 0.615, 0, bedG, 14, 0.97);
+duvetRoll.rotation.x = Math.PI / 2;
+duvetRoll.material = duvetMat;
 // 이불 끝단이 살짝 흘러내린 느낌
-addBox(1.62, 0.05, 1.32, 0xfffdfa, -0.62, 0.505, -2.28, bedG, false);
-// 베개 2개 (오른쪽 머리맡)
-var pil1 = addBox(0.32, 0.13, 0.44, 0xfffdf8, 0.52, 0.57, -2.58, bedG, true);
+addRBox(1.62, 0.06, 1.44, 0.03, duvetMat, -0.34, 0.545, 0, bedG, false);
+// 베개 2개 (오른쪽 머리맡 · 폭신)
+var pil1 = addRBox(0.34, 0.16, 0.46, 0.07, cottonMat, 0.80, 0.64, -0.28, bedG, true);
 pil1.rotation.y = 0.06;
-var pil2 = addBox(0.32, 0.13, 0.44, 0xfffdf8, 0.52, 0.57, -2.00, bedG, true);
+var pil2 = addRBox(0.34, 0.16, 0.46, 0.07, cottonMat, 0.80, 0.64, 0.28, bedG, true);
 pil2.rotation.y = -0.05;
-addSphere(0.16, 0.055, 0.22, 0xffffff, 0.52, 0.645, -2.58, bedG, 0.9);
-addSphere(0.16, 0.055, 0.22, 0xffffff, 0.52, 0.645, -2.00, bedG, 0.9);
+addSphere(0.17, 0.045, 0.23, 0xffffff, 0.80, 0.71, -0.28, bedG, 0.98);
+addSphere(0.17, 0.045, 0.23, 0xffffff, 0.80, 0.71, 0.28, bedG, 0.98);
 // 발치 니트 담요
-addBox(0.62, 0.09, 1.34, 0xe3d2ba, -1.12, 0.56, -2.28, bedG, true);
-addBox(0.06, 0.13, 1.30, 0xd9c4a8, -0.82, 0.50, -2.28, bedG, false);
+addRBox(0.62, 0.10, 1.38, 0.045, knitMat, -0.82, 0.63, 0, bedG, true);
+addRBox(0.07, 0.15, 1.36, 0.03, knitMat, -0.52, 0.585, 0, bedG, false);
 
-var bedWrap = wrapFurniture('침대', -0.28, -2.28, scene.children.slice(__mBed));
-
+var bedWrap = registerFurniture('침대', bedG);
 // 창틀 인형 4총사
 function makePlush(kind) {
   var g = new THREE.Group();
@@ -939,32 +1011,37 @@ for (var pi = 0; pi < 4; pi++) {
   scene.add(pl);
 }
 
-// ================== 책상 + 뽀글이 회전의자 (오른쪽 벽 창가쪽) ==================
-var __mDesk = scene.children.length;
-addBox(0.60, 0.05, 1.12, 0xfaf7f2, 1.70, 0.74, -2.06, scene, true); // 상판
-addBox(0.05, 0.72, 0.05, 0xf0ebe4, 1.44, 0.37, -2.58, scene, false);
-addBox(0.05, 0.72, 0.05, 0xf0ebe4, 1.44, 0.37, -1.54, scene, false);
-addBox(0.50, 0.70, 0.03, 0xfaf7f2, 1.96, 0.36, -2.06, scene, false);
+// ================== 책상 + 뽀글이 회전의자 (오른쪽 벽 · 침대와 소파 사이) ==================
+var deskG = new THREE.Group();
+deskG.position.set(2.25, 0, -1.02);
+scene.add(deskG);
+// 상판 (둥근 모서리)
+addRBox(0.60, 0.05, 0.98, 0.035, mat(0xfaf7f2, 0.8), 0, 0.74, 0, deskG, true);
+// 다리
+addBox(0.05, 0.72, 0.05, 0xf0ebe4, -0.24, 0.37, -0.43, deskG, false);
+addBox(0.05, 0.72, 0.05, 0xf0ebe4, -0.24, 0.37, 0.43, deskG, false);
+addBox(0.05, 0.72, 0.05, 0xf0ebe4, 0.24, 0.37, -0.43, deskG, false);
+addBox(0.05, 0.72, 0.05, 0xf0ebe4, 0.24, 0.37, 0.43, deskG, false);
+// 벽쪽 얇은 패널
+addRBox(0.03, 0.70, 0.94, 0.012, mat(0xfaf7f2, 0.8), 0.28, 0.36, 0, deskG, false);
 // 노트북
-addBox(0.36, 0.02, 0.24, 0x4a4d55, 1.68, 0.78, -2.22, scene, true);
-var lapTop = addBox(0.34, 0.22, 0.015, 0x3e4148, 1.52, 0.90, -2.22, scene, false);
-lapTop.rotation.z = 0.32;
-// 곽티슈
-addBox(0.13, 0.075, 0.10, 0xf7f1e8, 1.72, 0.80, -1.72, scene, true);
-addBox(0.07, 0.02, 0.06, 0xffffff, 1.72, 0.845, -1.72, scene, false);
-// 디퓨저
-addCyl(0.028, 0.030, 0.10, 0xd9c3b0, 1.80, 0.82, -1.60, scene, 12);
-addCyl(0.004, 0.004, 0.10, 0x2f2b28, 1.80, 0.92, -1.60, scene, 6);
-addCyl(0.004, 0.004, 0.10, 0x2f2b28, 1.79, 0.92, -1.605, scene, 6);
-// 작은 캔들 (은은한 불빛)
-addCyl(0.035, 0.035, 0.06, 0xf2e6d2, 1.84, 0.80, -2.45, scene, 14);
-addSphere(0.012, 0.018, 0.012, 0xffc98a, 1.84, 0.845, -2.45, scene, 0.5);
+addRBox(0.24, 0.02, 0.34, 0.012, mat(0x4a4d55, 0.5), 0.0, 0.775, -0.06, deskG, true);
+var lapTop = addRBox(0.015, 0.22, 0.33, 0.01, mat(0x3e4148, 0.5), 0.14, 0.88, -0.06, deskG, false);
+lapTop.rotation.z = 0.24;
+// 곽티슈 · 디퓨저 · 캔들
+addRBox(0.13, 0.08, 0.11, 0.02, mat(0xf7f1e8, 0.85), 0.02, 0.80, 0.36, deskG, true);
+addRBox(0.07, 0.02, 0.06, 0.01, mat(0xffffff, 0.85), 0.02, 0.845, 0.36, deskG, false);
+addCyl(0.028, 0.030, 0.10, 0xd9c3b0, 0.05, 0.82, -0.38, deskG, 12);
+addCyl(0.004, 0.004, 0.10, 0x2f2b28, 0.05, 0.92, -0.38, deskG, 6);
+addCyl(0.004, 0.004, 0.10, 0x2f2b28, 0.04, 0.92, -0.385, deskG, 6);
+addCyl(0.035, 0.035, 0.06, 0xf2e6d2, -0.02, 0.80, 0.16, deskG, 14);
+addSphere(0.012, 0.018, 0.012, 0xffc98a, -0.02, 0.845, 0.16, deskG, 0.5);
 
 // 뽀글이(부클레) 회전의자
 var chairG = new THREE.Group();
-chairG.position.set(1.06, 0, -2.04);
-chairG.rotation.y = -0.9;
-scene.add(chairG);
+chairG.position.set(-0.63, 0, -0.02);
+chairG.rotation.y = 0.95;
+deskG.add(chairG);
 addCyl(0.26, 0.26, 0.03, 0xcfd1d3, 0, 0.045, 0, chairG, 20);
 for (var ci2 = 0; ci2 < 5; ci2++) {
   var ang = ci2 * Math.PI * 2 / 5;
@@ -973,73 +1050,78 @@ for (var ci2 = 0; ci2 < 5; ci2++) {
   addSphere(0.028, 0.028, 0.025, 0x3d3f45, Math.cos(ang) * 0.30, 0.028, Math.sin(ang) * 0.30, chairG, 0.5);
 }
 addCyl(0.045, 0.045, 0.30, 0xdadcde, 0, 0.20, 0, chairG, 10);
-addBox(0.46, 0.11, 0.42, 0xf7f2ea, 0, 0.415, 0.02, chairG, false); // 좌방석
-addBox(0.44, 0.06, 0.40, 0xfbf7f1, 0, 0.47, 0.02, chairG, false);    // 방석 쿠션
-var chairBack = addBox(0.42, 0.32, 0.10, 0xf9f5ee, 0, 0.61, -0.20, chairG, false); // 등받이
+addRBox(0.46, 0.13, 0.44, 0.06, boucleMat, 0, 0.40, 0.01, chairG, false);   // 좌방석
+addRBox(0.44, 0.07, 0.42, 0.035, boucleMat, 0, 0.475, 0.02, chairG, false);  // 방석 쿠션
+var chairBack = addRBox(0.44, 0.36, 0.14, 0.07, boucleMat, 0, 0.63, -0.19, chairG, false);
 chairBack.rotation.x = -0.12;
-addCyl(0.05, 0.05, 0.07, 0xf3ede4, 0, 0.77, -0.20, chairG, 12);       // 목 지지
-var headrest = addCyl(0.075, 0.075, 0.30, 0xf9f5ee, 0, 0.83, -0.21, chairG, 14);
-headrest.rotation.z = Math.PI / 2;
-addBox(0.07, 0.17, 0.30, 0xf7f2ea, -0.20, 0.50, -0.02, chairG, false); // 팔걸이
-addBox(0.07, 0.17, 0.30, 0xf7f2ea, 0.20, 0.50, -0.02, chairG, false);
+addCyl(0.05, 0.05, 0.07, 0xf3ede4, 0, 0.81, -0.20, chairG, 12);
+addRBox(0.30, 0.11, 0.12, 0.05, boucleMat, 0, 0.88, -0.21, chairG, false);
+addRBox(0.09, 0.16, 0.30, 0.04, boucleMat, -0.21, 0.50, -0.02, chairG, false);
+addRBox(0.09, 0.16, 0.30, 0.04, boucleMat, 0.21, 0.50, -0.02, chairG, false);
 
-var deskWrap = wrapFurniture('컴퓨터 책상', 1.62, -2.06, scene.children.slice(__mDesk));
-
-// ================== 소파 (아이보리 2인용) + 치이카와 쿠션 ==================
-var __mSofa = scene.children.length;
+var deskWrap = registerFurniture('컴퓨터 책상', deskG);
+// ================== 소파 (아이보리 2인용 · 부클레) ==================
 var sofaG = new THREE.Group();
+sofaG.position.set(2.11, 0, 0.165);
 scene.add(sofaG);
-// 베이스 / 좌방석
-addBox(0.86, 0.26, 1.50, 0xf3ede2, 1.57, 0.19, -0.62, sofaG, true); // 하부 프레임
-addBox(0.72, 0.15, 0.68, 0xfcf8f1, 1.52, 0.39, -0.99, sofaG, true); // 좌방석 1
-addBox(0.72, 0.15, 0.68, 0xfcf8f1, 1.52, 0.39, -0.27, sofaG, true); // 좌방석 2
-addBox(0.20, 0.54, 1.50, 0xf1eadf, 1.92, 0.50, -0.62, sofaG, true); // 등판
-addBox(0.16, 0.36, 0.66, 0xfbf6ee, 1.80, 0.62, -0.99, sofaG, true); // 등쿠션 1
-addBox(0.16, 0.36, 0.66, 0xfbf6ee, 1.80, 0.62, -0.27, sofaG, true); // 등쿠션 2
-addBox(0.86, 0.22, 0.13, 0xf1eadf, 1.57, 0.41, -1.31, sofaG, true); // 팔걸이
-addBox(0.86, 0.22, 0.13, 0xf1eadf, 1.57, 0.41, 0.08, sofaG, true);
 // 다리
-addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.24, 0.05, -1.26, sofaG, 8);
-addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.24, 0.05, 0.02, sofaG, 8);
-addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.90, 0.05, -1.26, sofaG, 8);
-addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.90, 0.05, 0.02, sofaG, 8);
+addCyl(0.03, 0.03, 0.10, 0x6d5a48, -0.32, 0.05, -0.50, sofaG, 8);
+addCyl(0.03, 0.03, 0.10, 0x6d5a48, -0.32, 0.05, 0.50, sofaG, 8);
+addCyl(0.03, 0.03, 0.10, 0x6d5a48, 0.30, 0.05, -0.50, sofaG, 8);
+addCyl(0.03, 0.03, 0.10, 0x6d5a48, 0.30, 0.05, 0.50, sofaG, 8);
+// 하부 프레임
+addRBox(0.86, 0.26, 1.23, 0.09, boucleMat, 0, 0.18, 0, sofaG, true);
+// 좌방석 2개 (말랑)
+addRBox(0.64, 0.19, 0.56, 0.08, boucleMat, -0.06, 0.40, -0.30, sofaG, true);
+addRBox(0.64, 0.19, 0.56, 0.08, boucleMat, -0.06, 0.40, 0.30, sofaG, true);
+// 등판 + 등쿠션
+addRBox(0.20, 0.54, 1.23, 0.08, boucleMat, 0.33, 0.50, 0, sofaG, true);
+addRBox(0.20, 0.40, 0.56, 0.09, boucleMat, 0.20, 0.58, -0.30, sofaG, true);
+addRBox(0.20, 0.40, 0.56, 0.09, boucleMat, 0.20, 0.58, 0.30, sofaG, true);
+// 팔걸이
+addRBox(0.80, 0.26, 0.15, 0.06, boucleMat, 0, 0.42, -0.545, sofaG, true);
+addRBox(0.80, 0.26, 0.15, 0.06, boucleMat, 0, 0.42, 0.545, sofaG, true);
 
 // 소파 등받이에 걸친 니트 담요
-var sofaThrow = addMesh(new THREE.BoxGeometry(0.30, 0.30, 0.60), new THREE.MeshStandardMaterial({map: stripeTex, roughness: 0.95}), 1.86, 0.66, -1.18, sofaG, true);
-sofaThrow.rotation.z = 0.06;
+var sofaThrow = addRBox(0.30, 0.36, 0.52, 0.05, knitMat, 0.30, 0.64, -0.36, sofaG, true);
+sofaThrow.rotation.z = 0.07;
 
 // 치이카와 얼굴 쿠션
 var cush = new THREE.Group();
-cush.position.set(1.62, 0.60, -0.42);
+cush.position.set(-0.12, 0.56, -0.30);
 cush.rotation.z = 0.18;
-cush.rotation.y = -0.35;
-scene.add(cush);
+cush.rotation.y = 2.4;
+sofaG.add(cush);
 var cushBody = addSphere(0.20, 0.19, 0.09, 0xfffdf8, 0, 0, 0, cush, 0.95);
 var cushFace = new THREE.Mesh(
   new THREE.PlaneGeometry(0.30, 0.30),
   new THREE.MeshBasicMaterial({ map: faceTexes.chiikawa, transparent: true, depthWrite: false })
 );
 cushFace.position.set(0, 0.0, 0.088);
-cushFace.rotation.y = -0.18;
 cush.add(cushFace);
 
 // 소파 앞 스트라이프 슬리퍼
-var slipper1 = addBoxT(0.13, 0.045, 0.26, stripeTex, 0.86, 0.025, -0.62, scene, true, 0.95);
+var slWrap = new THREE.Group();
+slWrap.position.set(1.35, 0, 0.32);
+scene.add(slWrap);
+var slipper1 = addBoxT(0.13, 0.045, 0.26, stripeTex, 0, 0.025, -0.14, slWrap, true, 0.95);
 slipper1.rotation.y = 0.15;
-var slipper2 = addBoxT(0.13, 0.045, 0.26, stripeTex, 0.86, 0.025, -0.34, scene, true, 0.95);
+var slipper2 = addBoxT(0.13, 0.045, 0.26, stripeTex, 0, 0.025, 0.14, slWrap, true, 0.95);
 slipper2.rotation.y = -0.08;
+registerFurniture('슬리퍼', slWrap);
 
-var sofaWrap = wrapFurniture('소파', 1.60, -0.62, scene.children.slice(__mSofa));
-
+var sofaWrap = registerFurniture('소파', sofaG);
 // ================== 화이트 스툴(오토만) + 강아지 인형 ==================
-var __mStool = scene.children.length;
-addBox(0.42, 0.40, 0.44, 0xfaf6ef, 0.93, 0.20, -0.08, scene, true);
-addSphere(0.21, 0.06, 0.22, 0xfdfaf5, 0.93, 0.41, -0.08, scene, 0.97);
+var stoolG = new THREE.Group();
+stoolG.position.set(0.93, 0, -0.08);
+scene.add(stoolG);
+addRBox(0.42, 0.36, 0.44, 0.10, cottonMat, 0, 0.19, 0, stoolG, true);
+addSphere(0.21, 0.06, 0.22, 0xfdfaf5, 0, 0.40, 0, stoolG, 0.97);
 // 강아지 인형 (베이지, 엎드린 자세)
 var dogG = new THREE.Group();
-dogG.position.set(0.93, 0.44, -0.08);
+dogG.position.set(0, 0.44, 0);
 dogG.rotation.y = -1.15;
-scene.add(dogG);
+stoolG.add(dogG);
 addSphere(0.15, 0.085, 0.10, 0xd8b489, 0, 0.07, 0, dogG, 0.95);        // 몸통
 addSphere(0.095, 0.085, 0.085, 0xdcb98f, 0.15, 0.10, 0, dogG, 0.95);   // 머리
 addSphere(0.045, 0.035, 0.035, 0xe4c39a, 0.22, 0.075, 0, dogG, 0.95);  // 주둥이
@@ -1052,13 +1134,12 @@ addSphere(0.045, 0.035, 0.035, 0xd8b489, -0.12, 0.035, 0.06, dogG, 0.95);  // �
 addSphere(0.045, 0.035, 0.035, 0xd8b489, -0.12, 0.035, -0.06, dogG, 0.95);
 addSphere(0.05, 0.03, 0.03, 0xc9a173, -0.17, 0.075, 0, dogG, 0.95);       // 꼬리
 
-var stoolWrap = wrapFurniture('스툴', 0.93, -0.08, scene.children.slice(__mStool));
-
+var stoolWrap = registerFurniture('스툴', stoolG);
 // ================== 러그 + 조약돌 테이블 ==================
-var rugTexMat = new THREE.MeshStandardMaterial({map: rugTex, roughness: 0.98, color: 0xf4e8d8});
-var rug = new THREE.Mesh(new THREE.PlaneGeometry(2.66, 2.28), rugTexMat);
+var rugTexMat = new THREE.MeshStandardMaterial({map: rugTex, bumpMap: rugTex, bumpScale: 0.006, roughness: 0.99, color: 0xf6ebdc});
+var rug = new THREE.Mesh(new THREE.PlaneGeometry(3.10, 2.50), rugTexMat);
 rug.rotation.x = -Math.PI / 2;
-rug.position.set(-0.22, 0.008, -0.55);
+rug.position.set(-0.30, 0.008, -0.62);
 rug.receiveShadow = true;
 scene.add(rug);
 
@@ -1090,24 +1171,24 @@ addSphere(0.011, 0.016, 0.011, 0xffc98a, 0.14, 0.44, -0.02, tableG, 0.5);
 
 var tableWrap = wrapFurniture('소파 테이블', -0.48, -0.55, scene.children.slice(__mTable));
 
-// ================== 왼쪽 벽 붙박이장 (크림 하이그로시) ==================
+// ================== 왼쪽 벽 붙박이장 (창가까지) ==================
 var closetG = new THREE.Group();
 scene.add(closetG);
-addBox(0.58, 2.36, 3.94, 0xf2e7da, -1.71, 1.18, -1.02, closetG, true);
+addBox(0.56, 2.36, 3.00, 0xf2e7da, -2.26, 1.18, -1.44, closetG, true);
 // 상단 몰딩 / 하단 걸레받이
-addBox(0.60, 0.05, 3.96, 0xe8dccd, -1.71, 2.33, -1.02, closetG, false);
-addBox(0.60, 0.05, 3.96, 0xe4d8c9, -1.71, 0.03, -1.02, closetG, false);
-// 문짝 세로 이음선 + 손잡이 (도어 6장)
-for (var dz2 = -2.86; dz2 <= 0.86; dz2 += 0.62) {
-  addBox(0.012, 2.26, 0.012, 0xded1c1, -1.415, 1.18, dz2, closetG, false);
-  addBox(0.014, 0.30, 0.014, 0xc6b8a8, -1.408, 1.16, dz2 + 0.07, closetG, false);
+addBox(0.58, 0.05, 3.02, 0xe8dccd, -2.26, 2.33, -1.44, closetG, false);
+addBox(0.58, 0.05, 3.02, 0xe4d8c9, -2.26, 0.03, -1.44, closetG, false);
+// 문짝 세로 이음선 + 손잡이 (도어 5장)
+for (var dz2 = -2.92; dz2 <= 0.08; dz2 += 0.60) {
+  addBox(0.012, 2.26, 0.012, 0xded1c1, -1.972, 1.18, dz2, closetG, false);
+  addBox(0.014, 0.30, 0.014, 0xc6b8a8, -1.965, 1.16, dz2 + 0.07, closetG, false);
 }
 // 문짝 손잡이 라인 (가로)
-addBox(0.014, 0.012, 3.9, 0xe6d9c9, -1.412, 1.62, -1.02, closetG, false);
+addBox(0.014, 0.012, 2.96, 0xe6d9c9, -1.969, 1.62, -1.44, closetG, false);
 
 // 붙박이장에 걸린 가방 (검정 토트)
 var bagG = new THREE.Group();
-bagG.position.set(-1.38, 1.26, 0.34);
+bagG.position.set(-1.94, 1.26, -0.58);
 scene.add(bagG);
 addBox(0.10, 0.34, 0.30, 0x2e2c2c, 0, 0, 0, bagG, true);
 addBox(0.055, 0.06, 0.10, 0x242222, 0, 0.19, 0, bagG, false);
@@ -1116,184 +1197,183 @@ handle1.rotation.y = Math.PI / 2;
 var handle2 = addMesh(new THREE.TorusGeometry(0.075, 0.008, 6, 14, Math.PI), mat(0x3a3737, 0.6), 0, 0.19, -0.07, bagG, false);
 handle2.rotation.y = Math.PI / 2;
 
-// ================== 주방 (현관 왼쪽) ==================
+// ================== 주방 (현관 → 창가 순서: 냉장고 → 싱크대+드럼세탁기 → 인덕션 → 전자렌지/커피 → 붙박이장) ==================
 var kitG = new THREE.Group();
 scene.add(kitG);
-// 1) 붙박이 키큰장 (전자레인지 니치 포함)
-addBox(0.58, 2.36, 0.54, 0xf1e6d9, -1.71, 1.18, 1.28, kitG, true);
-addBox(0.014, 1.20, 0.012, 0xded1c1, -1.415, 0.62, 1.28, kitG, false);
-addBox(0.014, 0.30, 0.014, 0xc6b8a8, -1.408, 1.10, 1.42, kitG, false);
-// 니치 안쪽 (전자레인지 자리)
-addBox(0.02, 0.46, 0.44, 0xe4d8ca, -1.43, 1.56, 1.28, kitG, false);
-addBox(0.58, 0.02, 0.44, 0xe4d8ca, -1.71, 1.33, 1.28, kitG, false);
-addBox(0.58, 0.02, 0.44, 0xe4d8ca, -1.71, 1.79, 1.28, kitG, false);
-addBox(0.58, 0.46, 0.02, 0xe4d8ca, -1.71, 1.56, 1.50, kitG, false);
-addBox(0.58, 0.46, 0.02, 0xe4d8ca, -1.71, 1.56, 1.06, kitG, false);
-// 전자레인지 (화이트 + 우드 손잡이)
-addBox(0.40, 0.30, 0.38, 0xf2f1ee, -1.61, 1.56, 1.28, kitG, true);
-addBox(0.02, 0.22, 0.26, 0x30343a, -1.395, 1.56, 1.24, kitG, false);
-addBox(0.025, 0.28, 0.05, 0xb98a5d, -1.392, 1.56, 1.42, kitG, false);
-addBox(0.022, 0.10, 0.05, 0x8a8f96, -1.395, 1.56, 1.08, kitG, false);
-addBox(0.014, 0.44, 0.012, 0xded1c1, -1.415, 2.10, 1.28, kitG, false);
+var KW = -2.24;             // 주방 가구 중심 X
+var KFACE = -1.94;          // 주방 앞면 X
 
-// 1-2) 붙박이형 냉장고 (문이 실제로 열림)
-addBox(0.52, 0.05, 0.44, 0xd8ccbd, -1.73, 0.025, 1.79, kitG, false);
-addBox(0.52, 0.04, 0.44, 0xe8dccd, -1.73, 1.86, 1.79, kitG, false);
-addBox(0.03, 1.86, 0.44, 0xe8dccd, -1.975, 0.93, 1.79, kitG, false);
-addBox(0.52, 1.86, 0.03, 0xe8dccd, -1.73, 0.93, 1.585, kitG, false);
-addBox(0.52, 1.86, 0.03, 0xe8dccd, -1.73, 0.93, 1.995, kitG, false);
-[0.42, 0.80, 1.18, 1.54].forEach(function(y) {
-  addBox(0.44, 0.02, 0.40, 0xeef4f6, -1.74, y, 1.79, kitG, false);
-});
-addCyl(0.035, 0.035, 0.16, 0xe8f4dc, -1.80, 0.52, 1.70, kitG, 10);
-addCyl(0.035, 0.035, 0.16, 0xf6d0d8, -1.80, 0.52, 1.86, kitG, 10);
-addBox(0.10, 0.18, 0.08, 0xfdfcf8, -1.70, 0.53, 1.72, kitG, false);
-addCyl(0.04, 0.04, 0.20, 0xf2e6c8, -1.78, 0.92, 1.90, kitG, 10);
-addBox(0.12, 0.10, 0.12, 0xe8d0a0, -1.76, 0.87, 1.68, kitG, false);
-addBox(0.14, 0.08, 0.10, 0xd8e8f4, -1.74, 1.24, 1.86, kitG, false);
-addBox(0.10, 0.14, 0.10, 0xd8a0a8, -1.76, 1.62, 1.72, kitG, false);
-addBox(0.10, 0.10, 0.10, 0xc8dca8, -1.76, 1.60, 1.90, kitG, false);
-// 냉장고 도어 (피벗 회전)
-var fridgePivot = new THREE.Group();
-fridgePivot.position.set(-1.462, 0, 1.585);
-scene.add(fridgePivot);
-var fridgeDoor = addMesh(new THREE.BoxGeometry(0.05, 1.84, 0.42), mat(0xf1e6d9, 0.55), 0, 0.93, 0.21, fridgePivot, true);
-addBox(0.03, 0.34, 0.03, 0xc9bdae, 0.035, 0.98, 0.36, fridgePivot, false);
-addBox(0.012, 1.80, 0.38, 0xe8dccd, 0.03, 0.93, 0.21, fridgePivot, false);
-// 가방걸이 + 백팩 (검정)
-addBox(0.03, 0.05, 0.03, 0xc9bdae, -1.40, 1.86, 1.12, kitG, false);
-var packG = new THREE.Group();
-packG.position.set(-1.36, 1.52, 1.12);
-scene.add(packG);
-addBox(0.16, 0.30, 0.24, 0x27262a, 0, 0, 0, packG, true);
-addBox(0.05, 0.10, 0.16, 0x1f1e22, 0.06, 0.14, 0, packG, false);
-var strap = addMesh(new THREE.TorusGeometry(0.10, 0.012, 6, 14, Math.PI), mat(0x2f2e32, 0.7), 0, 0.17, 0, packG, false);
-strap.rotation.z = Math.PI / 2;
+// ---- 1) 전자레인지 붙박이장 (창가 쪽 · z 0.10 ~ 1.16) ----
+addBox(0.50, 2.36, 1.04, 0xf1e6d9, KW, 1.18, 0.63, scene, true);
+addBox(0.014, 1.16, 0.012, 0xded1c1, KFACE - 0.01, 0.60, 0.63, scene, false);
+// 전자레인지 니치
+addBox(0.02, 0.50, 0.62, 0xe4d8ca, KFACE - 0.08, 1.56, 0.63, scene, false);
+addBox(0.46, 0.02, 0.60, 0xe4d8ca, KW, 1.31, 0.63, scene, false);
+addBox(0.46, 0.02, 0.60, 0xe4d8ca, KW, 1.81, 0.63, scene, false);
+// 전자레인지
+addBox(0.36, 0.30, 0.50, 0xf2f1ee, KFACE - 0.20, 1.56, 0.63, scene, true);
+addBox(0.02, 0.22, 0.32, 0x30343a, KFACE - 0.02, 1.56, 0.55, scene, false);
+addBox(0.025, 0.26, 0.05, 0xb98a5d, KFACE - 0.03, 1.56, 0.90, scene, false);
+addBox(0.022, 0.09, 0.04, 0x8a8f96, KFACE - 0.02, 1.56, 0.36, scene, false);
+// 니치 아래 서랍 손잡이
+addBox(0.014, 0.30, 0.012, 0xc6b8a8, KFACE - 0.02, 0.75, 0.63, scene, false);
 
-// 2) 싱크대 + 드럼세탁기 (현관쪽 벽)
-addBox(0.60, 0.86, 1.00, 0xf2e7da, -1.70, 0.43, 2.46, kitG, true);  // 하부장
-addBox(0.63, 0.045, 1.02, 0xefe9e0, -1.70, 0.885, 2.46, kitG, true); // 상판
-addBox(0.40, 0.03, 0.44, 0xcfd6dc, -1.70, 0.895, 2.36, kitG, false);  // 싱크볼
-addBox(0.40, 0.02, 0.44, 0xb9c1c8, -1.70, 0.905, 2.36, kitG, false);
-addCyl(0.018, 0.018, 0.22, 0xc2c9d0, -1.86, 1.00, 2.36, kitG, 10);
-addBox(0.16, 0.02, 0.02, 0xc2c9d0, -1.78, 1.10, 2.36, kitG, false);
-// 상부장 + 후드
-addBox(0.34, 0.66, 1.00, 0xf6ece0, -1.86, 1.98, 2.46, kitG, true);
-addBox(0.30, 0.10, 0.60, 0xd3d7dc, -1.80, 1.60, 2.36, kitG, false);
-// 드럼세탁기
-addBox(0.56, 0.80, 0.58, 0xf3f2ef, -1.70, 0.40, 2.72, kitG, true);
-addMesh(new THREE.TorusGeometry(0.17, 0.028, 8, 22), mat(0xd6dadf, 0.4, 0.5), -1.415, 0.42, 2.72, kitG, false);
-var wmDoor = addMesh(new THREE.CircleGeometry(0.155, 22), mat(0x5f6b78, 0.2, 0.6), -1.408, 0.42, 2.72, kitG, false);
+// ---- 2) 인덕션 (z 1.16 ~ 1.66) ----
+addBox(0.60, 0.86, 0.50, 0xf2e7da, KW, 0.43, 1.41, scene, true);
+addBox(0.62, 0.045, 0.52, 0xefe9e0, KW, 0.885, 1.41, scene, true);
+addBox(0.46, 0.012, 0.40, 0x2e3238, KW - 0.02, 0.912, 1.41, scene, false);
+// 인덕션 화구 2개
+addCyl(0.075, 0.075, 0.004, 0x4a5058, KW - 0.02, 0.919, 1.28, scene, 20);
+addCyl(0.075, 0.075, 0.004, 0x4a5058, KW - 0.02, 0.919, 1.55, scene, 20);
+// 후드
+addBox(0.34, 0.12, 0.52, 0xd3d7dc, KW + 0.06, 1.62, 1.41, scene, false);
+// 상부장 (싱크대 · 인덕션 위)
+addBox(0.34, 0.70, 1.22, 0xf6ece0, KW + 0.06, 1.98, 1.80, scene, true);
+addBox(0.014, 0.66, 0.012, 0xe4d8ca, KFACE - 0.11, 1.98, 1.80, scene, false);
+
+// ---- 3) 싱크대 + 드럼세탁기 (z 1.66 ~ 2.34) ----
+addBox(0.60, 0.86, 0.66, 0xf2e7da, KW, 0.43, 2.00, scene, true);
+addBox(0.62, 0.045, 0.68, 0xefe9e0, KW, 0.885, 2.00, scene, true);
+addBox(0.38, 0.03, 0.40, 0xcfd6dc, KW, 0.895, 2.06, scene, false);   // 싱크볼
+addBox(0.34, 0.02, 0.36, 0xb9c1c8, KW, 0.905, 2.06, scene, false);
+addCyl(0.018, 0.018, 0.22, 0xc2c9d0, KW + 0.16, 1.00, 2.06, scene, 10);
+addBox(0.16, 0.02, 0.02, 0xc2c9d0, KW + 0.08, 1.10, 2.06, scene, false);
+// 드럼세탁기 (싱크대 아래)
+addBox(0.54, 0.78, 0.58, 0xf3f2ef, KW, 0.40, 1.98, scene, true);
+addMesh(new THREE.TorusGeometry(0.17, 0.028, 8, 22), mat(0xd6dadf, 0.4, 0.5), KFACE - 0.02, 0.42, 1.98, scene, false);
+var wmDoor = addMesh(new THREE.CircleGeometry(0.155, 22), mat(0x5f6b78, 0.2, 0.6), KFACE - 0.012, 0.42, 1.98, scene, false);
 wmDoor.rotation.y = Math.PI / 2;
-addCyl(0.045, 0.045, 0.03, 0xc9ced4, -1.408, 0.72, 2.72, kitG, 12).rotation.z = Math.PI / 2;
+addCyl(0.045, 0.045, 0.03, 0xc9ced4, KFACE - 0.012, 0.70, 1.98, scene, 12).rotation.z = Math.PI / 2;
 
-// 3) 이동식 간이 테이블 + 에스프레소 머신
+// ---- 4) 냉장고 (현관 쪽 · z 2.34 ~ 2.94) ----
+addBox(0.52, 1.95, 0.60, 0xf1e6d9, KW + 0.02, 0.975, 2.64, scene, true);
+addBox(0.52, 0.05, 0.60, 0xd8ccbd, KW + 0.02, 0.025, 2.64, scene, false);
+addBox(0.03, 1.90, 0.58, 0xe8dccd, KW - 0.26, 0.97, 2.64, scene, false);
+addBox(0.52, 1.90, 0.03, 0xe8dccd, KW + 0.02, 0.97, 2.95, scene, false);
+// 냉장고 안쪽 선반 (문 열면 보임)
+[0.42, 0.80, 1.18, 1.54].forEach(function(y) {
+  addBox(0.44, 0.02, 0.50, 0xeef4f6, KW + 0.02, y, 2.64, scene, false);
+});
+addCyl(0.035, 0.035, 0.16, 0xe8f4dc, KW - 0.06, 0.52, 2.52, scene, 10);
+addCyl(0.035, 0.035, 0.16, 0xf6d0d8, KW - 0.06, 0.52, 2.68, scene, 10);
+addBox(0.10, 0.18, 0.08, 0xfdfcf8, KW + 0.02, 0.53, 2.50, scene, false);
+addCyl(0.04, 0.04, 0.20, 0xf2e6c8, KW - 0.04, 0.92, 2.74, scene, 10);
+addBox(0.12, 0.10, 0.12, 0xe8d0a0, KW - 0.02, 0.87, 2.48, scene, false);
+addBox(0.14, 0.08, 0.10, 0xd8e8f4, KW, 1.24, 2.70, scene, false);
+addBox(0.10, 0.14, 0.10, 0xd8a0a8, KW - 0.02, 1.62, 2.54, scene, false);
+// 냉장고 도어 (피벗 회전 · 힌지는 창가 쪽)
+var fridgePivot = new THREE.Group();
+fridgePivot.position.set(KFACE, 0, 2.34);
+scene.add(fridgePivot);
+var fridgeDoor = addMesh(new THREE.BoxGeometry(0.05, 1.92, 0.60), mat(0xf1e6d9, 0.55), 0, 0.96, 0.30, fridgePivot, true);
+addBox(0.03, 0.34, 0.03, 0xc9bdae, 0.045, 1.02, 0.52, fridgePivot, false);
+addBox(0.012, 1.88, 0.56, 0xe8dccd, 0.035, 0.96, 0.30, fridgePivot, false);
+
+// ---- 5) 이동식 커피 테이블 + 에스프레소 머신 (전자레인지장 앞) ----
 var rollG = new THREE.Group();
-rollG.position.set(-1.28, 0, 1.92);
+rollG.position.set(-1.76, 0, 0.62);
 scene.add(rollG);
-addBox(0.34, 0.04, 0.60, 0xf5f2ec, 0, 0.84, 0, rollG, true);
+addRBox(0.36, 0.04, 0.62, 0.02, mat(0xf5f2ec, 0.85), 0, 0.84, 0, rollG, true);
 for (var rx2 = -1; rx2 <= 1; rx2 += 2) {
   for (var rz2 = -1; rz2 <= 1; rz2 += 2) {
-    addBox(0.03, 0.80, 0.03, 0x9aa0a8, rx2 * 0.14, 0.42, rz2 * 0.26, rollG, false);
-    addSphere(0.028, 0.028, 0.028, 0x2e3034, rx2 * 0.14, 0.03, rz2 * 0.26, rollG, 0.5);
+    addBox(0.03, 0.80, 0.03, 0x9aa0a8, rx2 * 0.15, 0.42, rz2 * 0.27, rollG, false);
+    addSphere(0.028, 0.028, 0.028, 0x2e3034, rx2 * 0.15, 0.03, rz2 * 0.27, rollG, 0.5);
   }
 }
-addBox(0.28, 0.02, 0.52, 0xd8dbdf, 0, 0.30, 0, rollG, false);
+addBox(0.32, 0.02, 0.54, 0xd8dbdf, 0, 0.30, 0, rollG, false);
 // 에스프레소 머신 (크림 + 우드)
-addBox(0.24, 0.26, 0.22, 0xf4eee2, 0.0, 0.99, -0.05, rollG, true);
-addBox(0.20, 0.06, 0.16, 0xe6ded0, 0, 0.86, 0.06, rollG, false);
+addBox(0.24, 0.26, 0.24, 0xf4eee2, 0.0, 0.99, -0.06, rollG, true);
+addBox(0.20, 0.06, 0.17, 0xe6ded0, 0, 0.86, 0.05, rollG, false);
 addCyl(0.032, 0.032, 0.015, 0x3a3a3a, -0.06, 1.06, 0.062, rollG, 14).rotation.x = Math.PI / 2;
-addBox(0.02, 0.02, 0.10, 0x40403f, 0.02, 1.00, 0.13, rollG, false);
+addBox(0.02, 0.02, 0.10, 0x40403f, 0.02, 1.00, 0.14, rollG, false);
 addCyl(0.035, 0.030, 0.045, 0xfffdf8, 0.0, 0.895, 0.10, rollG, 12);
 // 물병 (투명)
-addCyl(0.045, 0.048, 0.26, 0xdceaf2, 0.02, 1.00, 0.22, rollG, 14, 0.25);
-addCyl(0.02, 0.02, 0.04, 0x4f9fd0, 0.02, 1.15, 0.22, rollG, 10);
-// 작은 오렌지 포인트 (머신 스티커 느낌)
+addCyl(0.045, 0.048, 0.26, 0xdceaf2, 0.02, 1.00, 0.24, rollG, 14, 0.25);
+addCyl(0.02, 0.02, 0.04, 0x4f9fd0, 0.02, 1.15, 0.24, rollG, 10);
 addBox(0.10, 0.05, 0.005, 0xe08a3c, 0.06, 1.02, 0.115, rollG, false);
 
-// ================== 화장실 + TV 가벽 ==================
-// 화장실: X -0.10 ~ +2.0 / Z +0.60 ~ +2.55 (문은 복도 쪽 서쪽 벽)
+// ================== 화장실 (남동쪽) + TV 가벽 ==================
+// 화장실: X +0.55 ~ +2.55 / Z +0.80 ~ +2.55 (문은 복도 쪽 서쪽 벽)
+var BATH_W = 0.55, BATH_E = 2.55, BATH_N = 0.80, BATH_S = 2.55;
 // 화장실 바닥 (타일)
-addBox(2.06, 0.02, 1.95, 0xeef1f3, 0.95, 0.012, 1.575, scene, false);
-addBox(0.72, 0.015, 0.62, 0xdfe9ee, 1.58, 0.02, 2.26, scene, false); // 샤워부스 바닥
-// 가벽 (TV 벽) — 거실 쪽 외벽에 벽걸이 TV
-var tvWall = addBox(2.10, 2.36, 0.10, WALL2, 0.95, 1.18, 0.60, scene, true);
-addBox(2.10, 0.06, 0.14, 0xf0e6da, 0.95, 2.35, 0.60, scene, false);
+addBox(2.00, 0.02, 1.75, 0xeef1f3, 1.55, 0.012, 1.675, scene, false);
+addBox(0.72, 0.015, 0.60, 0xdfe9ee, 2.10, 0.02, 2.24, scene, false); // 샤워부스 바닥
+// 가벽 (TV 벽)
+addBox(2.00, RH, 0.10, WALL2, 1.55, RH / 2, 0.80, scene, true);
+addBox(2.00, 0.06, 0.14, 0xf0e6da, 1.55, RH - 0.05, 0.80, scene, false);
 // 화장실 서쪽 벽 (복도 쪽 · 문 포함)
-addBox(0.08, 2.36, 0.74, WALL2, -0.10, 1.18, 0.97, scene, true);
-addBox(0.08, 2.36, 0.57, WALL2, -0.10, 1.18, 2.265, scene, true);
-addBox(0.08, 0.36, 0.70, WALL2, -0.10, 2.18, 1.66, scene, true); // 문 위 인방
-// 화장실 남쪽 벽 (신발장 쪽)
-addBox(2.10, 2.36, 0.08, WALL2, 0.95, 1.18, 2.55, scene, true);
+addBox(0.08, 2.36, 0.72, WALL2, 0.55, 1.18, 1.16, scene, true);
+addBox(0.08, 2.36, 0.37, WALL2, 0.55, 1.18, 2.365, scene, true);
+addBox(0.08, 0.36, 0.66, WALL2, 0.55, 2.18, 1.85, scene, true); // 문 위 인방
+// 화장실 남쪽 벽 (낮은 반벽 · 위로는 트여 있어 안이 잘 보임)
+addBox(2.00, 1.15, 0.08, WALL2, 1.55, 0.575, 2.55, scene, true);
+addBox(2.00, 0.05, 0.12, 0xf0e6da, 1.55, 1.16, 2.55, scene, false);
 // 화장실 문 (피벗 회전 · 복도로 열림)
 var doorPivot = new THREE.Group();
-doorPivot.position.set(-0.10, 0, 1.32);
+doorPivot.position.set(0.55, 0, 1.52);
 scene.add(doorPivot);
-var bathDoor = addBox(0.05, 2.00, 0.68, 0xf6f1ea, 0, 1.00, 0.34, doorPivot, true);
-addBox(0.045, 0.02, 0.56, 0xece4da, 0, 1.00, 0.34, doorPivot, false);
-addBox(0.055, 0.10, 0.045, 0xb9ab9c, 0, 1.00, 0.60, doorPivot, false);
+var bathDoor = addBox(0.05, 2.00, 0.66, 0xf6f1ea, 0, 1.00, 0.33, doorPivot, true);
+addBox(0.045, 0.02, 0.54, 0xece4da, 0, 1.00, 0.33, doorPivot, false);
+addBox(0.055, 0.10, 0.045, 0xb9ab9c, 0, 1.00, 0.58, doorPivot, false);
 var doorOpen = false;
 function toggleDoor() { doorOpen = !doorOpen; }
 
-// ---- 화장실 내부: 문 열고 들어가 오른쪽(동쪽) 벽을 마주보면
+// ---- 화장실 내부: 문 열고 들어가 동쪽을 마주보면
 //      왼쪽 = 변기 / 가운데 = 세면대 / 오른쪽 = 샤워부스 ----
-// 1) 변기 (왼쪽 · TV 벽 쪽)
-addBox(0.40, 0.36, 0.42, 0xfdfcf9, 1.62, 0.18, 1.00, scene, true);
-addBox(0.42, 0.05, 0.44, 0xf4f8fb, 1.62, 0.375, 1.00, scene, false);
-addBox(0.18, 0.44, 0.44, 0xfdfcf9, 1.87, 0.55, 1.00, scene, false);
-addBox(0.19, 0.04, 0.30, 0xf2f6f9, 1.87, 0.79, 1.00, scene, false);
-addBox(0.24, 0.03, 0.26, 0xeef4f8, 1.60, 0.41, 1.00, scene, false); // 시트 커버
-// 2) 세면대 (가운데 · 동쪽 벽)
-addBox(0.38, 0.12, 0.50, 0xfdfcf9, 1.79, 0.80, 1.58, scene, true);
-addBox(0.34, 0.02, 0.44, 0xdfe7ec, 1.79, 0.865, 1.58, scene, false);
-addBox(0.14, 0.72, 0.14, 0xf2f4f7, 1.79, 0.36, 1.58, scene, false);
-addBox(0.02, 0.20, 0.02, 0xc2c9d0, 1.95, 0.98, 1.58, scene, false); // 수전
-addBox(0.03, 0.60, 0.46, 0xdcf0fb, 1.955, 1.45, 1.58, scene, false); // 거울 (동쪽 벽)
-addBox(0.05, 0.03, 0.10, 0xe8eef2, 1.94, 1.78, 1.58, scene, false); // 거울등
-// 3) 샤워부스 (오른쪽 · 현관/신발장 쪽)
+// 1) 변기 (북쪽 벽 쪽)
+addBox(0.42, 0.36, 0.40, 0xfdfcf9, 1.10, 0.18, 1.20, scene, true);
+addBox(0.44, 0.05, 0.42, 0xf4f8fb, 1.10, 0.375, 1.20, scene, false);
+addBox(0.46, 0.44, 0.18, 0xfdfcf9, 1.10, 0.55, 0.94, scene, false);
+addBox(0.32, 0.04, 0.19, 0xf2f6f9, 1.10, 0.79, 0.94, scene, false);
+addBox(0.26, 0.03, 0.24, 0xeef4f8, 1.10, 0.41, 1.22, scene, false); // 시트 커버
+// 2) 세면대 (동쪽 벽)
+addBox(0.44, 0.12, 0.50, 0xfdfcf9, 2.32, 0.80, 1.60, scene, true);
+addBox(0.40, 0.02, 0.44, 0xdfe7ec, 2.32, 0.865, 1.60, scene, false);
+addBox(0.14, 0.72, 0.14, 0xf2f4f7, 2.40, 0.36, 1.60, scene, false);
+addBox(0.02, 0.20, 0.02, 0xc2c9d0, 2.50, 0.98, 1.60, scene, false); // 수전
+addBox(0.03, 0.60, 0.46, 0xdcf0fb, 2.515, 1.45, 1.60, scene, false); // 거울 (동쪽 벽)
+addBox(0.05, 0.03, 0.10, 0xe8eef2, 2.50, 1.78, 1.60, scene, false); // 거울등
+// 3) 샤워부스 (남동쪽 모서리)
 var showerGlass = new THREE.Mesh(
-  new THREE.BoxGeometry(0.84, 1.95, 0.03),
-  new THREE.MeshStandardMaterial({ color: 0xdff2ff, transparent: true, opacity: 0.32, roughness: 0.08 })
+  new THREE.BoxGeometry(0.80, 1.95, 0.03),
+  new THREE.MeshStandardMaterial({ color: 0xdff2ff, transparent: true, opacity: 0.30, roughness: 0.08 })
 );
-showerGlass.position.set(1.54, 0.98, 2.03);
+showerGlass.position.set(2.10, 0.98, 2.02);
 scene.add(showerGlass);
-addBox(0.03, 1.95, 0.04, 0xc6d3da, 1.12, 0.98, 2.03, scene, false); // 유리 모서리
-addBox(0.05, 0.62, 0.05, 0xc8d0d8, 1.93, 1.52, 2.30, scene, false);  // 샤워기 바
-addCyl(0.10, 0.10, 0.02, 0xd8e0e8, 1.88, 1.82, 2.28, scene, 16);     // 헤드
-addBox(0.26, 0.03, 0.16, 0xe8eef2, 1.92, 1.10, 2.28, scene, false);  // 샴푸 선반
-addBox(0.06, 0.12, 0.06, 0xf2f2ee, 1.90, 1.18, 2.24, scene, false);
-addBox(0.05, 0.10, 0.05, 0xd8e8c8, 1.90, 1.17, 2.32, scene, false);
+addBox(0.03, 1.95, 0.04, 0xc6d3da, 1.70, 0.98, 2.02, scene, false); // 유리 모서리
+addBox(0.03, 1.95, 0.03, 0xc6d3da, 2.50, 0.98, 2.02, scene, false);
+addBox(0.05, 0.62, 0.05, 0xc8d0d8, 2.48, 1.52, 2.30, scene, false);  // 샤워기 바
+addCyl(0.10, 0.10, 0.02, 0xd8e0e8, 2.42, 1.82, 2.28, scene, 16);     // 헤드
+addBox(0.16, 0.03, 0.26, 0xe8eef2, 2.44, 1.10, 2.28, scene, false);  // 샴푸 선반
+addBox(0.06, 0.12, 0.06, 0xf2f2ee, 2.44, 1.18, 2.20, scene, false);
+addBox(0.05, 0.10, 0.05, 0xd8e8c8, 2.44, 1.17, 2.34, scene, false);
 // 화장실 소품 (발매트 · 수건 · 화장지)
-addBox(0.52, 0.012, 0.34, 0xd8e4ec, 1.28, 0.02, 1.55, scene, false);
-addCyl(0.012, 0.012, 0.40, 0xc8ced4, 0.55, 1.46, 0.66, scene, 8).rotation.z = Math.PI / 2;
-addBox(0.28, 0.40, 0.02, 0xf4f7f9, 0.55, 1.26, 0.68, scene, false);
-addBox(0.10, 0.12, 0.10, 0xfbf7f0, 1.60, 0.62, 1.24, scene, false);
+addBox(0.52, 0.012, 0.34, 0xd8e4ec, 1.10, 0.02, 1.78, scene, false);
+addCyl(0.012, 0.012, 0.40, 0xc8ced4, 1.60, 1.46, 0.87, scene, 8).rotation.z = Math.PI / 2;
+addBox(0.28, 0.40, 0.02, 0xf4f7f9, 1.60, 1.26, 0.89, scene, false);
+addBox(0.10, 0.12, 0.10, 0xfbf7f0, 1.36, 0.62, 1.44, scene, false);
 // 화장실 내부 조명
 var bathLight = new THREE.PointLight(0xf2f7ff, 0.5, 3.2, 2);
-bathLight.position.set(0.95, 2.05, 1.6);
+bathLight.position.set(1.55, 2.05, 1.65);
 scene.add(bathLight);
 
 // ================== 현관 신발장 (화장실 남쪽 · 현관문 옆) ==================
-addBox(1.02, 1.04, 0.34, 0xf8f4ee, 0.78, 0.52, 2.79, scene, true);
-addBox(0.98, 0.02, 0.36, 0xefe7dc, 0.78, 1.055, 2.79, scene, true);
-addBox(0.014, 0.86, 0.01, 0xe2d8cb, 0.78, 0.52, 2.615, scene, false);
-addBox(0.12, 0.025, 0.025, 0xd9c3a8, 0.72, 0.68, 2.60, scene, false);
-addBox(0.12, 0.025, 0.025, 0xd9c3a8, 0.84, 0.68, 2.60, scene, false);
+addBox(1.10, 1.04, 0.34, 0xf8f4ee, 1.18, 0.52, 2.76, scene, true);
+addBox(1.06, 0.02, 0.36, 0xefe7dc, 1.18, 1.055, 2.76, scene, true);
+addBox(0.014, 0.86, 0.01, 0xe2d8cb, 1.18, 0.52, 2.585, scene, false);
+addBox(0.12, 0.025, 0.025, 0xd9c3a8, 1.12, 0.68, 2.57, scene, false);
+addBox(0.12, 0.025, 0.025, 0xd9c3a8, 1.24, 0.68, 2.57, scene, false);
 // 신발장 위 소품
-addBox(0.16, 0.09, 0.12, 0xefe4d5, 0.55, 1.11, 2.78, scene, false);
-addBox(0.10, 0.16, 0.08, 0xd8e2ea, 1.02, 1.14, 2.78, scene, false);
-// 전신거울 (현관 쪽 벽)
-addBox(0.46, 1.52, 0.03, 0xd9ecfa, 1.62, 1.16, 2.945, scene, false);
-addBox(0.50, 0.04, 0.05, 0xe8ded1, 1.62, 1.94, 2.93, scene, false);
-addBox(0.50, 0.04, 0.05, 0xe8ded1, 1.62, 0.38, 2.93, scene, false);
+addBox(0.16, 0.09, 0.12, 0xefe4d5, 0.92, 1.11, 2.76, scene, false);
+addBox(0.10, 0.16, 0.08, 0xd8e2ea, 1.42, 1.14, 2.76, scene, false);
 
-// 벽걸이 TV (가벽 북쪽 면)
+// 벽걸이 TV (가벽 북쪽 면 · 거실 쪽)
 var tvScreenMat = new THREE.MeshStandardMaterial({
   map: pitchTex, roughness: 0.32, metalness: 0.0, emissive: 0xffffff, emissiveMap: pitchTex, emissiveIntensity: 0.42
 });
-addBox(1.36, 0.80, 0.06, 0x24262a, 1.18, 1.50, 0.545, scene, false);
+addBox(1.36, 0.80, 0.06, 0x24262a, 1.30, 1.50, 0.735, scene, false);
 var tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.28, 0.72), tvScreenMat);
-tvScreen.position.set(1.18, 1.50, 0.512);
+tvScreen.position.set(1.30, 1.50, 0.702);
 tvScreen.rotation.y = Math.PI;
 scene.add(tvScreen);
 var tvOn = true;
@@ -1307,48 +1387,45 @@ function toggleTV() {
 }
 
 // TV 아래 화이트 2단 서랍장
-var __mDrawer = scene.children.length;
-addBox(0.64, 0.62, 0.38, 0xfbf8f2, 1.28, 0.31, 0.40, scene, true);
-addBox(0.60, 0.25, 0.02, 0xf8f4ec, 1.28, 0.445, 0.213, scene, false);
-addBox(0.60, 0.25, 0.02, 0xf8f4ec, 1.28, 0.165, 0.213, scene, false);
-addBox(0.62, 0.014, 0.01, 0xd6c9b8, 1.28, 0.305, 0.212, scene, false);
-addBox(0.62, 0.014, 0.01, 0xd6c9b8, 1.28, 0.028, 0.212, scene, false);
-addCyl(0.022, 0.022, 0.022, 0xd9c3a8, 1.18, 0.445, 0.20, scene, 12).rotation.x = Math.PI / 2;
-addCyl(0.022, 0.022, 0.022, 0xd9c3a8, 1.18, 0.165, 0.20, scene, 12).rotation.x = Math.PI / 2;
+var dresserG = new THREE.Group();
+dresserG.position.set(1.30, 0, 0.58);
+scene.add(dresserG);
+addRBox(0.64, 0.62, 0.34, 0.04, mat(0xfbf8f2, 0.75), 0, 0.31, 0, dresserG, true);
+addRBox(0.58, 0.24, 0.02, 0.01, mat(0xf8f4ec, 0.8), 0, 0.44, -0.17, dresserG, false);
+addRBox(0.58, 0.24, 0.02, 0.01, mat(0xf8f4ec, 0.8), 0, 0.17, -0.17, dresserG, false);
+addCyl(0.022, 0.022, 0.022, 0xd9c3a8, -0.10, 0.44, -0.19, dresserG, 12).rotation.x = Math.PI / 2;
+addCyl(0.022, 0.022, 0.022, 0xd9c3a8, -0.10, 0.17, -0.19, dresserG, 12).rotation.x = Math.PI / 2;
 // 2단 오픈 선반
-addBox(0.60, 0.42, 0.26, 0xfbf8f2, 1.28, 0.85, 0.46, scene, true);
-addBox(0.56, 0.02, 0.24, 0xf1ebe2, 1.28, 0.86, 0.46, scene, false);
-addBox(0.56, 0.02, 0.24, 0xf1ebe2, 1.28, 1.05, 0.46, scene, false);
-// 선반 소품 (산타 와인병 · 미니 박스 · 화장품)
-addCyl(0.026, 0.026, 0.20, 0x2f4a34, 1.10, 1.16, 0.46, scene, 10);
-addBox(0.05, 0.08, 0.05, 0xd94a4a, 1.10, 1.08, 0.46, scene, false);
-addBox(0.14, 0.10, 0.10, 0xf2b6c8, 1.38, 0.97, 0.46, scene, false);
-addBox(0.05, 0.12, 0.05, 0xe8dcc8, 1.20, 0.97, 0.44, scene, false);
-addBox(0.05, 0.10, 0.05, 0xd8e2ea, 1.30, 0.96, 0.44, scene, false);
-addBox(0.06, 0.14, 0.06, 0xf6e2a8, 1.46, 0.98, 0.46, scene, false);
-addBox(0.10, 0.10, 0.10, 0xe08a3c, 1.50, 1.14, 0.47, scene, false);
-addBox(0.05, 0.05, 0.05, 0x3d3a37, 1.18, 1.14, 0.48, scene, false);
+addRBox(0.60, 0.42, 0.26, 0.03, mat(0xfbf8f2, 0.75), 0, 0.85, 0.05, dresserG, true);
+// 선반 소품
+addCyl(0.026, 0.026, 0.20, 0x2f4a34, -0.18, 1.10, 0.05, dresserG, 10);
+addBox(0.05, 0.08, 0.05, 0xd94a4a, -0.18, 1.02, 0.05, dresserG, false);
+addRBox(0.14, 0.10, 0.10, 0.02, mat(0xf2b6c8, 0.85), 0.10, 0.91, 0.05, dresserG, false);
+addBox(0.05, 0.12, 0.05, 0xe8dcc8, -0.02, 0.91, 0.03, dresserG, false);
+addBox(0.05, 0.10, 0.05, 0xd8e2ea, 0.08, 0.90, 0.03, dresserG, false);
+addBox(0.06, 0.14, 0.06, 0xf6e2a8, 0.20, 0.92, 0.05, dresserG, false);
+addBox(0.10, 0.10, 0.10, 0xe08a3c, 0.24, 1.06, 0.06, dresserG, false);
+addBox(0.05, 0.05, 0.05, 0x3d3a37, -0.10, 1.06, 0.07, dresserG, false);
 // 서랍장 위 리모컨/소품
-addBox(0.16, 0.025, 0.05, 0x232323, 1.06, 0.635, 0.30, scene, false);
-addBox(0.10, 0.035, 0.06, 0xf4f0e8, 1.22, 0.64, 0.30, scene, false);
-
-var dresserWrap = wrapFurniture('TV 서랍장', 1.28, 0.40, scene.children.slice(__mDrawer));
+addBox(0.16, 0.025, 0.05, 0x232323, 0.02, 0.635, -0.04, dresserG, false);
+addBox(0.10, 0.035, 0.06, 0xf4f0e8, 0.18, 0.64, -0.04, dresserG, false);
+var dresserWrap = registerFurniture('TV 서랍장', dresserG);
 
 // 우드 상판 스트라이프 천 트롤리
 var trolleyG = new THREE.Group();
-trolleyG.position.set(0.44, 0, 0.36);
+trolleyG.position.set(0.40, 0, 0.58);
 scene.add(trolleyG);
-addBox(0.40, 0.04, 0.36, 0xd7ab78, 0, 0.74, 0, trolleyG, true);   // 우드 상판
-addBox(0.38, 0.56, 0.34, 0xfbf8f2, 0, 0.44, 0, trolleyG, true);    // 프레임
+addRBox(0.40, 0.04, 0.36, 0.02, mat(0xd7ab78, 0.8), 0, 0.74, 0, trolleyG, true);
+addRBox(0.38, 0.56, 0.34, 0.03, mat(0xfbf8f2, 0.85), 0, 0.44, 0, trolleyG, true);
 var cloth = addBoxT(0.36, 0.44, 0.32, stripeTex, 0, 0.44, 0.012, trolleyG, false, 0.95);
-addBox(0.36, 0.02, 0.30, 0xf1ebe2, 0, 0.20, 0, trolleyG, false);   // 하단 선반
+addRBox(0.36, 0.02, 0.30, 0.01, mat(0xf1ebe2, 0.85), 0, 0.20, 0, trolleyG, false);
 addBox(0.02, 0.02, 0.30, 0xc8ccd2, 0.19, 0.12, 0, trolleyG, false);
 addBox(0.02, 0.02, 0.30, 0xc8ccd2, -0.19, 0.12, 0, trolleyG, false);
 addSphere(0.02, 0.02, 0.02, 0x303234, 0.17, 0.03, 0.12, trolleyG, 0.5);
 addSphere(0.02, 0.02, 0.02, 0x303234, 0.17, 0.03, -0.12, trolleyG, 0.5);
 addSphere(0.02, 0.02, 0.02, 0x303234, -0.17, 0.03, 0.12, trolleyG, 0.5);
 addSphere(0.02, 0.02, 0.02, 0x303234, -0.17, 0.03, -0.12, trolleyG, 0.5);
-// 트롤리 위 소품: 캔들 2개 · 디퓨저 · 탁상시계
+// 트롤리 위 소품
 addCyl(0.033, 0.033, 0.06, 0xe8ebe0, -0.10, 0.79, 0.03, trolleyG, 12);
 addSphere(0.010, 0.014, 0.010, 0xffcb8e, -0.10, 0.826, 0.03, trolleyG, 0.5);
 addCyl(0.030, 0.030, 0.05, 0xf1e6c8, -0.02, 0.785, 0.0, trolleyG, 12);
@@ -1358,14 +1435,14 @@ addCyl(0.004, 0.004, 0.13, 0x201f1e, 0.075, 0.90, 0.0, trolleyG, 6);
 addBox(0.10, 0.10, 0.075, 0xf7f4ec, 0.13, 0.81, 0.03, trolleyG, false);
 addMesh(new THREE.CircleGeometry(0.036, 18), mat(0xfdfbf6, 0.8), 0.13, 0.81, 0.07, trolleyG, false);
 addCyl(0.003, 0.003, 0.02, 0x2b2b2b, 0.13, 0.818, 0.072, trolleyG, 6);
-// 하단 선반 병들
 addCyl(0.028, 0.028, 0.14, 0xf4f2ee, -0.08, 0.28, 0.02, trolleyG, 10);
 addCyl(0.024, 0.024, 0.12, 0xe8dfd2, 0.02, 0.27, -0.04, trolleyG, 10);
 addBox(0.12, 0.07, 0.10, 0xe8d27a, 0.09, 0.255, 0.04, trolleyG, false);
+registerFurniture('트롤리', trolleyG);
 
 // 화이트 스탠드 서큘레이터
 var fanG = new THREE.Group();
-fanG.position.set(0.74, 0, 0.30);
+fanG.position.set(0.80, 0, 0.60);
 scene.add(fanG);
 addCyl(0.16, 0.17, 0.03, 0xf6f4f0, 0, 0.02, 0, fanG, 20);
 addCyl(0.045, 0.045, 0.52, 0xf8f6f2, 0, 0.28, 0, fanG, 12);
@@ -1385,7 +1462,7 @@ addBox(0.22, 0.16, 0.10, 0xf8f6f2, 0, -0.14, -0.12, fanHead, false);
 
 // 블랙 플로어 스탠드 조명 (따뜻한 불빛)
 var lampG = new THREE.Group();
-lampG.position.set(0.06, 0, 0.36);
+lampG.position.set(0.05, 0, 0.62);
 scene.add(lampG);
 addCyl(0.16, 0.17, 0.025, 0x1f1f21, 0, 0.012, 0, lampG, 20);
 addCyl(0.016, 0.016, 1.68, 0x232325, 0, 0.86, 0, lampG, 10);
@@ -1396,39 +1473,38 @@ var shade = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.085, 0.15, 26, 1, 
 shade.position.set(0, 1.70, 0);
 lampG.add(shade);
 addSphere(0.05, 0.05, 0.05, 0xfff0d0, 0, 1.62, 0, lampG, 0.4);
-
-registerFurniture('트롤리', trolleyG);
 registerFurniture('서큘레이터', fanG);
 registerFurniture('플로어 램프', lampG);
 
-// ================== 소파 위 액자 4개 + 월패드 / 보일러 조절기 ==================
+// ================== 오른쪽 벽 액자 4개 + 월패드 / 보일러 조절기 ==================
 function makeFrame(w, h, frameCol, tex, x, y, z, rotY) {
   var g = new THREE.Group();
   g.position.set(x, y, z);
   g.rotation.y = rotY;
-  addBox(w, h, 0.03, frameCol, 0, 0, 0, g, true);
+  addRBox(w, h, 0.03, 0.012, mat(frameCol, 0.7), 0, 0, 0, g, true);
   var pic = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.05, h - 0.05), new THREE.MeshBasicMaterial({ map: tex }));
   pic.position.z = 0.018;
   g.add(pic);
   scene.add(g);
   return g;
 }
-var frameWallX = 1.955;
-makeFrame(0.30, 0.38, 0x1e1e20, photoTexes[2], frameWallX, 1.98, -1.16, -Math.PI / 2);
-makeFrame(0.26, 0.34, 0xfdfcf8, photoTexes[1], frameWallX, 2.10, -0.86, -Math.PI / 2);
-makeFrame(0.28, 0.36, 0x1e1e20, photoTexes[3], frameWallX, 1.72, -0.74, -Math.PI / 2);
-makeFrame(0.26, 0.34, 0xfdfcf8, photoTexes[0], frameWallX, 1.95, -0.44, -Math.PI / 2);
+var frameWallX = 2.535;
+makeFrame(0.30, 0.38, 0x1e1e20, photoTexes[2], frameWallX, 1.98, -1.40, -Math.PI / 2);
+makeFrame(0.26, 0.34, 0xfdfcf8, photoTexes[1], frameWallX, 2.10, -1.06, -Math.PI / 2);
+makeFrame(0.28, 0.36, 0x1e1e20, photoTexes[3], frameWallX, 1.72, -0.92, -Math.PI / 2);
+makeFrame(0.26, 0.34, 0xfdfcf8, photoTexes[0], frameWallX, 1.95, -0.62, -Math.PI / 2);
 // 월패드 (인터폰)
-addBox(0.03, 0.20, 0.30, 0xfdfcf8, 1.955, 1.62, -0.08, scene, true);
-addBox(0.012, 0.13, 0.20, 0x35507a, 1.938, 1.62, -0.08, scene, false);
+addBox(0.03, 0.20, 0.30, 0xfdfcf8, 2.535, 1.62, -0.18, scene, true);
+addBox(0.012, 0.13, 0.20, 0x35507a, 2.518, 1.62, -0.18, scene, false);
 // 보일러 / 에어컨 조절기 2개
-addBox(0.03, 0.13, 0.18, 0xf6f4ee, 1.955, 1.34, 0.06, scene, true);
-addBox(0.012, 0.07, 0.11, 0xcfe0b8, 1.938, 1.35, 0.03, scene, false);
-addBox(0.03, 0.13, 0.13, 0xf6f4ee, 1.955, 1.34, 0.24, scene, true);
-addBox(0.012, 0.06, 0.07, 0xb8d6e8, 1.938, 1.35, 0.22, scene, false);
+addBox(0.03, 0.13, 0.18, 0xf6f4ee, 2.535, 1.34, 0.02, scene, true);
+addBox(0.012, 0.07, 0.11, 0xcfe0b8, 2.518, 1.35, -0.01, scene, false);
+addBox(0.03, 0.13, 0.13, 0xf6f4ee, 2.535, 1.34, 0.22, scene, true);
+addBox(0.012, 0.06, 0.07, 0xb8d6e8, 2.518, 1.35, 0.20, scene, false);
 
 // ================== 현관 (남쪽 벽) ==================
 addBox(RW, RH, 0.10, WALL, 0, RH / 2, 3.0, scene, true);
+addBox(RW, 0.05, 0.06, 0xf0e6da, 0, RH - 0.02, 2.98, scene, false);
 // 현관문 (그레이)
 addBox(0.94, 2.06, 0.06, 0x9aa1a8, -0.62, 1.03, 2.94, scene, true);
 addBox(0.90, 0.02, 0.05, 0x8d949b, -0.62, 1.50, 2.91, scene, false);
@@ -1442,92 +1518,173 @@ addBox(0.80, 0.015, 0.50, 0xd9d3c9, -0.62, 0.008, 2.62, scene, false);
 addBox(0.12, 0.04, 0.24, 0xe6e0d6, -0.86, 0.02, 2.60, scene, false);
 addBox(0.12, 0.04, 0.24, 0xe6e0d6, -0.70, 0.02, 2.60, scene, false);
 // 벽 후크 + 에코백
-addBox(0.04, 0.05, 0.02, 0xc9bdae, -1.30, 1.72, 2.93, scene, false);
+addBox(0.04, 0.05, 0.02, 0xc9bdae, -1.34, 1.72, 2.93, scene, false);
 var ecoG = new THREE.Group();
-ecoG.position.set(-1.30, 1.40, 2.90);
+ecoG.position.set(-1.34, 1.40, 2.90);
 scene.add(ecoG);
 addBox(0.22, 0.30, 0.05, 0xdcd6c8, 0, 0, 0, ecoG, false);
 
-// 빨래 건조대 + 옷 2벌 (현관 안쪽)
-var rackG = new THREE.Group();
-rackG.position.set(-1.02, 0, 0.42);
-rackG.rotation.y = 0.12;
-scene.add(rackG);
-addCyl(0.012, 0.012, 1.10, 0xc9ccd0, -0.26, 0.55, -0.16, rackG, 8);
-addCyl(0.012, 0.012, 1.10, 0xc9ccd0, 0.26, 0.55, -0.16, rackG, 8);
-addCyl(0.012, 0.012, 1.10, 0xc9ccd0, -0.26, 0.55, 0.16, rackG, 8);
-addCyl(0.012, 0.012, 1.10, 0xc9ccd0, 0.26, 0.55, 0.16, rackG, 8);
-var rackBar = addCyl(0.010, 0.010, 0.56, 0xc9ccd0, 0, 1.06, 0, rackG, 8);
-rackBar.rotation.z = Math.PI / 2;
-// 티셔츠 2벌
-addBox(0.30, 0.42, 0.015, 0xfdfcf8, -0.14, 0.78, 0.02, rackG, false);
-addBox(0.26, 0.40, 0.015, 0xcdb9e4, 0.16, 0.79, 0.02, rackG, false);
-addMesh(new THREE.TorusGeometry(0.045, 0.007, 6, 12, Math.PI), mat(0x9c8f7f, 0.7), -0.14, 1.00, 0.02, rackG, false);
-addMesh(new THREE.TorusGeometry(0.045, 0.007, 6, 12, Math.PI), mat(0x9c8f7f, 0.7), 0.16, 1.00, 0.02, rackG, false);
-
-// ================== 천장 없음(돌하우스 뷰) 대신 상단 마감 몰딩 ==================
+// ================== 상단 마감 몰딩 (천장 없음 · 돌하우스 뷰) ==================
 addBox(RW, 0.05, 0.06, 0xf0e6da, 0, RH - 0.02, -2.98, scene, false);
-addBox(0.06, 0.05, RD, 0xf0e6da, -1.98, RH - 0.02, 0, scene, false);
-addBox(0.06, 0.05, RD, 0xf0e6da, 1.98, RH - 0.02, 0, scene, false);
-addBox(RW, 0.05, 0.06, 0xf0e6da, 0, RH - 0.02, 2.98, scene, false);
-
-// ================== 캐릭터 생성 ==================
+addBox(0.06, 0.05, RD, 0xf0e6da, -HX + 0.02, RH - 0.02, 0, scene, false);
+addBox(0.06, 0.05, RD, 0xf0e6da, HX - 0.02, RH - 0.02, 0, scene, false);
+// ================== 캐릭터 생성 (2~2.5등신 동글동글) ==================
 function makeChar(role) {
   var g = new THREE.Group();
   var rig = new THREE.Group();
   g.add(rig);
   var isJ = role === 'jungu';
-  var bodyCol = isJ ? 0x8ec5fc : 0xffa6c4;
-  var headCol = 0xffe4d1;
+  var skin = 0xffe6d5;
+  var bodyCol = isJ ? 0xa8d3fb : 0xffb0c8;   // 준구 스카이블루 / 지희 딸기우유
+  var trimCol = isJ ? 0xeaf5ff : 0xfff2f7;
+  var hairCol = isJ ? 0x3a2c25 : 0x4b342b;
+  var bodyMat = mat(bodyCol, 0.95);
+  var headMat = mat(skin, 0.7);
+  var hairMat = mat(hairCol, 0.82);
 
-  // 몸통 (몽글 캡슐형)
-  var body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.20, 0.42, 16), mat(bodyCol, 0.7));
-  body.position.y = 0.33; body.castShadow = true; rig.add(body);
+  // 다리 (짧고 동글)
+  var legL = new THREE.Group(); legL.position.set(-0.075, 0.16, 0); rig.add(legL);
+  var legR = new THREE.Group(); legR.position.set(0.075, 0.16, 0); rig.add(legR);
+  var legMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.075, 4, 10), mat(isJ ? 0x5b6472 : 0xfff4f8, 0.9));
+  legMesh.position.y = -0.055; legMesh.castShadow = true;
+  legL.add(legMesh);
+  var legMesh2 = legMesh.clone(); legR.add(legMesh2);
+  // 발
+  var shoeMat = mat(isJ ? 0xffffff : 0xffe1ea, 0.8);
+  var shoeL = addRBox(0.10, 0.06, 0.15, 0.03, shoeMat, 0, -0.115, 0.025, legL, false);
+  var shoeR = addRBox(0.10, 0.06, 0.15, 0.03, shoeMat, 0, -0.115, 0.025, legR, false);
 
-  // 다리
-  var legL = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.16, 10), mat(0x4b4e58));
-  legL.position.set(-0.07, 0.08, 0); rig.add(legL);
-  var legR = legL.clone(); legR.position.x = 0.07; rig.add(legR);
+  // 몸통 (동글한 니트)
+  var body = addSphere(0.185, 0.195, 0.162, bodyCol, 0, 0.33, 0, rig, 0.95);
+  body.castShadow = true;
+  var hip = addSphere(0.175, 0.13, 0.155, bodyCol, 0, 0.22, 0, rig, 0.95);
 
-  // 머리
-  var head = new THREE.Mesh(new THREE.SphereGeometry(0.21, 20, 16), mat(headCol, 0.72));
-  head.position.y = 0.72; head.castShadow = true; rig.add(head);
+  // 팔 (어깨 피벗)
+  var armL = new THREE.Group(); armL.position.set(-0.175, 0.42, 0); rig.add(armL);
+  var armR = new THREE.Group(); armR.position.set(0.175, 0.42, 0); rig.add(armR);
+  var armMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.048, 0.11, 4, 10), bodyMat);
+  armMesh.position.y = -0.085; armMesh.castShadow = true; armL.add(armMesh);
+  var armMesh2 = armMesh.clone(); armR.add(armMesh2);
+  // 손
+  var handL = addSphere(0.05, 0.05, 0.05, skin, 0, -0.165, 0, armL, 0.75);
+  var handR = addSphere(0.05, 0.05, 0.05, skin, 0, -0.165, 0, armR, 0.75);
 
-  // 머리카락 / 모자 포인트
-  var hair = new THREE.Mesh(new THREE.SphereGeometry(0.22, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.56), mat(isJ ? 0x3b302a : 0x4b382f));
-  hair.position.set(0, 0.74, -0.01); rig.add(hair);
+  // 목
+  addCyl(0.062, 0.07, 0.06, skin, 0, 0.50, 0, rig, 12);
 
-  if (!isJ) {
-    // 지희: 귀여운 핑크 리본
-    var rib = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.06, 0.06), mat(0xff6b9d));
-    rib.position.set(0.14, 0.92, 0.05); rig.add(rib);
+  // 머리 (큼직하고 동근)
+  var head = addSphere(0.255, 0.248, 0.242, skin, 0, 0.72, 0, rig, 0.7);
+  head.castShadow = true;
+  // 볼 (말랑)
+  addSphere(0.10, 0.085, 0.075, 0xffdfcb, -0.155, 0.655, 0.14, rig, 0.85);
+  addSphere(0.10, 0.085, 0.075, 0xffdfcb, 0.155, 0.655, 0.14, rig, 0.85);
+  // 귀
+  addSphere(0.045, 0.058, 0.03, skin, -0.245, 0.70, 0.01, rig, 0.8);
+  addSphere(0.045, 0.058, 0.03, skin, 0.245, 0.70, 0.01, rig, 0.8);
+
+  // 일자 눈 (- -)
+  var eyeMat = new THREE.MeshBasicMaterial({ color: 0x2a211d });
+  var eL = addRBox(0.075, 0.022, 0.022, 0.01, eyeMat, -0.088, 0.725, 0.222, rig, false);
+  var eR = addRBox(0.075, 0.022, 0.022, 0.01, eyeMat, 0.088, 0.725, 0.222, rig, false);
+  eL.rotation.x = -0.06; eR.rotation.x = -0.06;
+
+  // 입
+  if (isJ) {
+    // 준구: 작고 귀여운 미소
+    var mouth = addSphere(0.026, 0.014, 0.012, 0xc0705e, 0, 0.648, 0.235, rig, 0.8);
+  } else {
+    // 지희: 밝게 벌린 웃는 입
+    var mouthG = new THREE.Group();
+    mouthG.position.set(0, 0.645, 0.232);
+    rig.add(mouthG);
+    var mouthOut = addSphere(0.045, 0.038, 0.016, 0xb8576e, 0, 0, 0, mouthG, 0.7);
+    addSphere(0.032, 0.024, 0.012, 0xf08fa4, 0, -0.006, 0.01, mouthG, 0.7);
+  }
+  // 코 (아주 작게)
+  addSphere(0.014, 0.012, 0.012, 0xf7c4b0, 0, 0.685, 0.238, rig, 0.8);
+
+  // 볼터치 (뽀뽀하면 진해짐)
+  var blushMatL = new THREE.MeshBasicMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.4, depthWrite: false });
+  var blushMatR = new THREE.MeshBasicMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.4, depthWrite: false });
+  var bL = new THREE.Mesh(new THREE.CircleGeometry(0.052, 16), blushMatL);
+  bL.position.set(-0.145, 0.672, 0.196); bL.rotation.y = -0.5; rig.add(bL);
+  var bR = new THREE.Mesh(new THREE.CircleGeometry(0.052, 16), blushMatR);
+  bR.position.set(0.145, 0.672, 0.196); bR.rotation.y = 0.5; rig.add(bR);
+
+  // ---- 머리카락 ----
+  if (isJ) {
+    // 준구: 볼륨감 있는 5:5 가르마 앞머리
+    var cap = new THREE.Mesh(new THREE.SphereGeometry(0.262, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.52), hairMat);
+    cap.position.set(0, 0.718, -0.004); cap.castShadow = true; rig.add(cap);
+    var lockL = addSphere(0.118, 0.105, 0.10, hairCol, -0.105, 0.805, 0.115, rig, 0.85);
+    var lockR = addSphere(0.112, 0.10, 0.098, hairCol, 0.105, 0.808, 0.113, rig, 0.85);
+    // 가운데 살짝 갈라진 쉼표
+    addSphere(0.075, 0.062, 0.072, hairCol, 0.035, 0.862, 0.075, rig, 0.85);
+    addSphere(0.06, 0.05, 0.058, hairCol, -0.055, 0.856, 0.065, rig, 0.85);
+    // 옆머리
+    addSphere(0.075, 0.085, 0.085, hairCol, -0.215, 0.755, 0.02, rig, 0.85);
+    addSphere(0.075, 0.085, 0.085, hairCol, 0.215, 0.755, 0.02, rig, 0.85);
+    // 후드 (맨투맨)
+    var hood = addSphere(0.175, 0.09, 0.12, trimCol, 0, 0.455, -0.09, rig, 0.95);
+    // 셔츠 카라
+    addRBox(0.11, 0.035, 0.03, 0.012, mat(0xffffff, 0.9), -0.055, 0.475, 0.10, rig, false).rotation.z = 0.5;
+    addRBox(0.11, 0.035, 0.03, 0.012, mat(0xffffff, 0.9), 0.055, 0.475, 0.10, rig, false).rotation.z = -0.5;
+  } else {
+    // 지희: 일자 풀뱅 + 어깨 아래로 내려오는 긴 생머리
+    var cap2 = new THREE.Mesh(new THREE.SphereGeometry(0.266, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.56), hairMat);
+    cap2.position.set(0, 0.715, -0.006); cap2.castShadow = true; rig.add(cap2);
+    // 풀뱅 (이마를 덮는 앞머리)
+    var bang = addSphere(0.235, 0.105, 0.15, hairCol, 0, 0.80, 0.115, rig, 0.85);
+    addSphere(0.20, 0.05, 0.11, hairCol, 0, 0.845, 0.155, rig, 0.85);
+    // 앞머리 결
+    for (var bi = -2; bi <= 2; bi++) {
+      addRBox(0.008, 0.075, 0.012, 0.004, mat(0x3d2a22, 0.9), bi * 0.055, 0.795, 0.238, rig, false).rotation.z = bi * 0.04;
+    }
+    // 긴 생머리 (양옆)
+    addRBox(0.085, 0.44, 0.15, 0.035, hairMat, -0.245, 0.545, 0.005, rig, false);
+    addRBox(0.085, 0.44, 0.15, 0.035, hairMat, 0.245, 0.545, 0.005, rig, false);
+    // 뒷머리
+    addRBox(0.44, 0.42, 0.13, 0.06, hairMat, 0, 0.575, -0.175, rig, false);
+    // 사일러/둥근 카라 (딸기우유 니트)
+    addRBox(0.24, 0.10, 0.03, 0.014, mat(trimCol, 0.95), 0, 0.465, 0.115, rig, false);
+    addRBox(0.10, 0.055, 0.03, 0.014, mat(trimCol, 0.95), -0.075, 0.435, 0.115, rig, false).rotation.z = 0.4;
+    addRBox(0.10, 0.055, 0.03, 0.014, mat(trimCol, 0.95), 0.075, 0.435, 0.115, rig, false).rotation.z = -0.4;
+    // 작은 리본
+    addSphere(0.045, 0.03, 0.02, 0xf27fa2, 0.20, 0.885, 0.06, rig, 0.9);
+    addSphere(0.045, 0.03, 0.02, 0xf27fa2, 0.255, 0.875, 0.075, rig, 0.9);
   }
 
-  // 눈
-  var eyeMat = new THREE.MeshBasicMaterial({ color: 0x2b211c });
-  var eL = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), eyeMat);
-  eL.position.set(-0.075, 0.72, 0.19); rig.add(eL);
-  var eR = eL.clone(); eR.position.x = 0.075; rig.add(eR);
-
-  // 볼터치
-  var blMat = new THREE.MeshBasicMaterial({ color: 0xff9eb5 });
-  var bL = new THREE.Mesh(new THREE.CircleGeometry(0.032, 10), blMat);
-  bL.position.set(-0.125, 0.67, 0.175); bL.rotation.y = -0.35; rig.add(bL);
-  var bR = bL.clone(); bR.position.x = 0.125; bR.rotation.y = 0.35; rig.add(bR);
-
-  // 팔
-  var armL = new THREE.Mesh(new THREE.CapsuleGeometry(0.031, 0.19, 4, 8), mat(bodyCol, 0.8));
-  armL.position.set(-0.185, 0.40, 0.01); rig.add(armL);
-  var armR = armL.clone(); armR.position.x = 0.185; rig.add(armR);
-
-  // 손에 드는 컵 (커피/밥)
+  // 손에 드는 컵
   var cup = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.030, 0.075, 10), mat(0xf7f3ea, 0.6));
   cup.position.set(0.13, 0.34, 0.14);
   cup.visible = false;
   rig.add(cup);
 
+  // 샤워 거품 구름 (몽글몽글 흰 구체)
+  var bubbleCloud = new THREE.Group();
+  bubbleCloud.position.set(0, 0.42, 0);
+  bubbleCloud.visible = false;
+  rig.add(bubbleCloud);
+  var bubbleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, transparent: true, opacity: 0.92 });
+  var bubblesPts = [
+    [0.00, 0.32, -0.05, 0.15], [-0.13, 0.26, 0.06, 0.12], [0.14, 0.28, 0.05, 0.12],
+    [0.00, 0.16, 0.10, 0.13], [0.10, 0.10, -0.06, 0.11], [-0.11, 0.08, -0.05, 0.12],
+    [0.00, 0.03, 0.02, 0.13], [-0.06, 0.20, -0.13, 0.10], [0.07, 0.21, -0.12, 0.10],
+    [0.19, 0.16, 0.00, 0.09], [-0.19, 0.15, 0.00, 0.09], [0.00, 0.40, 0.00, 0.10],
+    [0.10, 0.34, -0.08, 0.08], [-0.10, 0.35, -0.07, 0.08]
+  ];
+  for (var bpi = 0; bpi < bubblesPts.length; bpi++) {
+    var bp = bubblesPts[bpi];
+    var bs = new THREE.Mesh(new THREE.SphereGeometry(bp[3], 12, 10), bubbleMat);
+    bs.position.set(bp[0], bp[1], bp[2]);
+    bubbleCloud.add(bs);
+  }
+
   g.userData.rig = rig;
-  g.userData.parts = { body: body, head: head, legL: legL, legR: legR, armL: armL, armR: armR, cup: cup };
+  g.userData.parts = {
+    body: body, head: head, legL: legL, legR: legR, armL: armL, armR: armR, cup: cup,
+    blushL: bL, blushR: bR, bubbleCloud: bubbleCloud
+  };
   return g;
 }
 
@@ -1538,7 +1695,7 @@ var bubbles = {}; // { id: { text, until } }
 function ensureChar(id, role, name) {
   if (chars[id]) return chars[id];
   var mesh = makeChar(role);
-  mesh.position.set(role === 'jungu' ? -0.45 : 0.35, 0, -1.25);
+  mesh.position.set(role === 'jungu' ? -0.62 : 0.02, 0, -1.20);
   scene.add(mesh);
 
   var el = document.createElement('div');
@@ -1770,6 +1927,23 @@ function initRealtime() {
       .on('broadcast', { event: 'furn' }, function(msg) {
         if (msg.payload && msg.payload.items) applyFurniture(msg.payload.items);
       })
+      .on('broadcast', { event: 'kiss' }, function(msg) {
+        var p = msg.payload;
+        if (!p) return;
+        var other = chars[p.from];
+        var me = chars[clientId];
+        if (other) {
+          other.blush = 1; other.kissUntil = performance.now() + 2600;
+          if (me) { me.mesh.rotation.y = Math.atan2(other.mesh.position.x - me.mesh.position.x, other.mesh.position.z - me.mesh.position.z); }
+        }
+        if (me) {
+          me.blush = 1; me.kissUntil = performance.now() + 2600;
+          var mid = me.mesh.position.clone();
+          for (var i = 0; i < 6; i++) addFx('heart', new THREE.Vector3(mid.x + (Math.random() - 0.5) * 0.34, 0.85 + Math.random() * 0.3, mid.z + (Math.random() - 0.5) * 0.34), { life: 1.8 });
+          showBubble(clientId, '부끄부끄 🫣');
+          if (!other) sfx('kiss');
+        }
+      })
       .on('broadcast', { event: 'chat' }, function(msg) {
         var p = msg.payload;
         if (!p || p.id === clientId) return;
@@ -1983,11 +2157,64 @@ function moveSelTo(cx, cy) {
 
 // 근접 시 액션바 (캐시로 DOM 재생성 방지)
 var __barKey = '';
+function showKissBar(partner) {
+  var bar = document.getElementById('action-bar');
+  if (!bar) return;
+  document.getElementById('action-title').textContent = '💕 ' + (partner.name || '옆자리');
+  var box = document.getElementById('action-btns');
+  box.innerHTML = '';
+  var b = document.createElement('button');
+  b.className = 'act-btn kiss';
+  b.textContent = '😘 뽀뽀하기';
+  b.onclick = function(e) { e.stopPropagation(); doKiss(partner); };
+  box.appendChild(b);
+  bar.classList.add('show');
+}
+function doKiss(partner) {
+  var me = chars[clientId];
+  if (!me || !partner) return;
+  var mp = me.mesh.position, op = partner.mesh.position;
+  var dx = op.x - mp.x, dz = op.z - mp.z;
+  var ang = Math.atan2(dx, dz);
+  // 서로 마주 보고 살짝 다가가기
+  me.mesh.rotation.y = ang;
+  partner.mesh.rotation.y = ang + Math.PI;
+  var step = Math.max(0, Math.hypot(dx, dz) - 0.62);
+  if (step > 0) {
+    var nx = mp.x + (dx / (Math.hypot(dx, dz) || 1)) * step * 0.5;
+    var nz = mp.z + (dz / (Math.hypot(dx, dz) || 1)) * step * 0.5;
+    if (!blockedAt(nx, nz)) { me.mesh.position.x = nx; me.mesh.position.z = nz; }
+  }
+  sfx('kiss');
+  var mid = new THREE.Vector3((mp.x + op.x) / 2, 0.78, (mp.z + op.z) / 2);
+  for (var i = 0; i < 7; i++) {
+    addFx('heart', new THREE.Vector3(mid.x + (Math.random() - 0.5) * 0.34, mid.y + Math.random() * 0.3, mid.z + (Math.random() - 0.5) * 0.34), { life: 1.8 });
+  }
+  me.blush = 1; partner.blush = 1;
+  me.kissUntil = performance.now() + 2600;
+  partner.kissUntil = performance.now() + 2600;
+  var pid = null;
+  Object.keys(chars).forEach(function(k) { if (chars[k] === partner) pid = k; });
+  showBubble(clientId, '쪽.. 💕');
+  if (pid) showBubble(pid, '부끄부끄 🫣');
+  hideActionBar();
+  __barKey = '';
+  if (sbChannel) sbChannel.send({ type: 'broadcast', event: 'kiss', payload: { from: clientId, to: pid, name: myName } });
+}
 function updateStationNear() {
   if (!myRole || placeMode) return;
   var me = chars[clientId];
   if (!me) return;
-  var p = me.mesh.position, best = null, bd = 99;
+  var p = me.mesh.position;
+  // 가까이 있으면 뽀뽀 버튼이 먼저
+  var pr = partnerNear(me, 1.15);
+  if (pr) {
+    var pk = 'kiss|' + pr.name;
+    if (__barKey !== pk) { __barKey = pk; showKissBar(pr); }
+    nearStation = null;
+    return;
+  }
+  var best = null, bd = 99;
   stations.forEach(function(st) {
     st.acts.forEach(function(a) {
       (a.slots || [{}]).forEach(function(s) {
@@ -2001,7 +2228,7 @@ function updateStationNear() {
     var c = chars[id];
     return c.act ? c.act.stId + c.act.actId + c.act.slot : '';
   }).join(',');
-  if (bd < 1.15) {
+  if (bd < (best && best.reach ? best.reach : 1.3)) {
     nearStation = best;
     if (best.id + '|' + key !== __barKey) { __barKey = best.id + '|' + key; showActionBar(best); }
   } else if (!pinnedStation || performance.now() > pinnedUntil) {
@@ -2089,6 +2316,7 @@ function sfx(kind) {
   else if (kind === 'open') { tone(520, 0.06, 'triangle', 0.05); tone(700, 0.06, 'triangle', 0.04, 0.06); }
   else if (kind === 'fridge') { tone(180, 0.12, 'sine', 0.07); noiseSource(0.03, 0.4, 500); }
   else if (kind === 'sit') { tone(330, 0.1, 'sine', 0.05); }
+  else if (kind === 'kiss') { tone(880, 0.09, 'sine', 0.22); tone(1320, 0.12, 'sine', 0.18, 0.08); noiseSource(0.02, 0.06, 3000); }
   else if (kind === 'zzz') { tone(240, 0.4, 'sine', 0.04); tone(200, 0.5, 'sine', 0.035, 0.5); }
 }
 
@@ -2300,15 +2528,15 @@ function startFx(id, kind) {
     } else if (kind === 'eat') {
       addFx('heart', new THREE.Vector3(p.x + (Math.random() - 0.5) * 0.3, p.y + 0.6, p.z + 0.1));
     } else if (kind === 'shower') {
-      for (var i = 0; i < 3; i++) addFx('drop', new THREE.Vector3(1.62 + (Math.random() - 0.5) * 0.5, 1.75, 2.26 + (Math.random() - 0.5) * 0.35), { life: 0.8 });
+      for (var i = 0; i < 3; i++) addFx('drop', new THREE.Vector3(2.10 + (Math.random() - 0.5) * 0.5, 1.75, 2.28 + (Math.random() - 0.5) * 0.35), { life: 0.8 });
     } else if (kind === 'wash') {
-      addFx('drop', new THREE.Vector3(1.78 + (Math.random() - 0.5) * 0.2, 0.95, 1.58 + (Math.random() - 0.5) * 0.2), { life: 0.7 });
+      addFx('drop', new THREE.Vector3(2.32 + (Math.random() - 0.5) * 0.2, 0.95, 1.60 + (Math.random() - 0.5) * 0.2), { life: 0.7 });
     } else if (kind === 'dish') {
-      for (var j = 0; j < 2; j++) addFx('bubble', new THREE.Vector3(-1.68 + (Math.random() - 0.5) * 0.3, 1.0, 2.36 + (Math.random() - 0.5) * 0.3), { life: 1.1 });
+      for (var j = 0; j < 2; j++) addFx('bubble', new THREE.Vector3(-2.00 + (Math.random() - 0.5) * 0.3, 1.0, 2.06 + (Math.random() - 0.5) * 0.3), { life: 1.1 });
     } else if (kind === 'cook') {
-      addFx('smoke', new THREE.Vector3(-1.68 + (Math.random() - 0.5) * 0.2, 1.15, 2.36 + (Math.random() - 0.5) * 0.2));
+      addFx('smoke', new THREE.Vector3(-2.00 + (Math.random() - 0.5) * 0.2, 1.15, 1.41 + (Math.random() - 0.5) * 0.2));
     } else if (kind === 'coffee') {
-      addFx('steam', new THREE.Vector3(-1.28 + (Math.random() - 0.5) * 0.1, 1.12, 1.92 + (Math.random() - 0.5) * 0.1), { life: 1.0 });
+      addFx('steam', new THREE.Vector3(-1.76 + (Math.random() - 0.5) * 0.1, 1.12, 0.62 + (Math.random() - 0.5) * 0.1), { life: 1.0 });
     } else if (kind === 'poop') {
       addFx('poop', new THREE.Vector3(p.x + 0.15, p.y + 0.7, p.z + 0.1));
     }
@@ -2316,6 +2544,57 @@ function startFx(id, kind) {
 }
 function stopFx(id) {
   if (fxTimers[id]) { clearInterval(fxTimers[id]); delete fxTimers[id]; }
+}
+
+
+// ---------- 이동 충돌 (벽 · 가구 밟고 지나가지 않게) ----------
+var blockers = [];
+function blk(x1, z1, x2, z2) {
+  blockers.push({ x1: Math.min(x1, x2), x2: Math.max(x1, x2), z1: Math.min(z1, z2), z2: Math.max(z1, z2) });
+}
+// 바닥 경계
+blk(-2.60, -3.00, -2.48, 3.00); blk(2.48, -3.00, 2.60, 3.00);
+blk(-2.60, -3.00, 2.60, -2.88); blk(-2.60, 2.88, 2.60, 3.00);
+// 붙박이장 · 주방
+blk(-2.60, -2.96, -1.97, 0.07);
+blk(-2.60, 0.08, -1.94, 2.96);
+blk(-1.95, 0.30, -1.56, 0.95);     // 이동식 커피 테이블
+// 침대
+blk(-1.36, -2.98, 0.80, -1.56);
+// 책상 + 의자
+blk(1.92, -1.56, 2.60, -0.48);
+blk(1.30, -1.40, 1.96, -0.66);
+// 소파 · 스툴 · 테이블
+blk(1.66, -0.47, 2.60, 0.82);
+blk(0.70, -0.32, 1.16, 0.16);
+blk(-1.08, -0.98, 0.12, -0.14);
+// TV 존 (서랍장 · 트롤리 · 서큘레이터 · 램프)
+blk(0.96, 0.40, 1.66, 0.80);
+blk(0.18, 0.38, 0.64, 0.80);
+blk(0.62, 0.42, 0.98, 0.80);
+blk(-0.12, 0.44, 0.22, 0.80);
+// 화장실 벽
+blk(0.49, 0.74, 2.60, 0.87);       // TV 가벽
+blk(0.49, 0.80, 0.62, 1.53);       // 서쪽 벽 (문 앞)
+blk(0.49, 2.17, 0.62, 2.60);       // 서쪽 벽 (문 뒤)
+blk(0.55, 2.50, 2.60, 2.62);       // 남쪽 반벽
+// 화장실 안 가구
+blk(0.86, 0.86, 1.36, 1.44);
+blk(2.06, 1.30, 2.60, 1.90);
+blk(1.66, 1.98, 2.60, 2.60);
+// 현관 신발장
+blk(0.60, 2.56, 1.76, 2.96);
+
+var BODY_R = 0.13;
+function blockedAt(x, z) {
+  if (x < -2.44 || x > 2.44 || z < -2.84 || z > 2.84) return true;
+  // 문이 닫혀 있으면 화장실 출입구 막힘
+  if (!doorOpen && x > 0.42 && x < 0.70 && z > 1.50 && z < 2.20) return true;
+  for (var i = 0; i < blockers.length; i++) {
+    var b = blockers[i];
+    if (x > b.x1 - BODY_R && x < b.x2 + BODY_R && z > b.z1 - BODY_R && z < b.z2 + BODY_R) return true;
+  }
+  return false;
 }
 
 // ---------- 스테이션(가구별 상호작용 지점) ----------
@@ -2341,63 +2620,63 @@ function slotPos(st, s) {
 function slotRot(st, s) { return (s.rot || 0) + (st.g ? st.g.rotation.y : 0); }
 
 function buildStations() {
-  station({ id: 'bed', name: '침대', g: bedWrap, acts: [
+  station({ id: 'bed', name: '침대', g: bedWrap, reach: 1.5, acts: [
     { id: 'sleep', label: '😴 잠자기', fx: 'sleep', sound: 'bed', slots: [
-      { x: -0.42, z: -2.56, rot: -Math.PI / 2, lie: true, y: 0.60 },
-      { x: -0.42, z: -2.06, rot: -Math.PI / 2, lie: true, y: 0.60 }
+      { x: -0.34, z: -2.42, rot: -Math.PI / 2, lie: true, y: 0.64 },
+      { x: -0.34, z: -2.02, rot: -Math.PI / 2, lie: true, y: 0.64 }
     ] }
   ] });
   station({ id: 'desk', name: '컴퓨터 책상', g: deskWrap, acts: [
     { id: 'game', label: '🎮 게임하기', fx: 'game', sound: 'type', slots: [
-      { x: 1.06, z: -2.04, rot: Math.PI / 2, sit: true, y: 0.44 }
+      { x: 1.62, z: -1.04, rot: Math.PI / 2, sit: true, y: 0.46 }
     ] }
   ] });
   station({ id: 'sofa', name: '소파', g: sofaWrap, acts: [
     { id: 'sofa_sit', label: '🪑 앉기', fx: null, sound: 'sit', slots: [
-      { x: 1.45, z: -0.98, rot: -Math.PI / 2, sit: true, y: 0.44 },
-      { x: 1.45, z: -0.28, rot: -Math.PI / 2, sit: true, y: 0.44 }
+      { x: 2.02, z: -0.13, rot: -Math.PI / 2, sit: true, y: 0.46 },
+      { x: 2.02, z: 0.47, rot: -Math.PI / 2, sit: true, y: 0.46 }
     ] },
     { id: 'sofa_lie', label: '🛋️ 눕기', fx: 'sleep', sound: 'bed', slots: [
-      { x: 1.62, z: -0.02, rot: Math.PI, lie: true, y: 0.44 }
+      { x: 2.02, z: 0.17, rot: 0, lie: true, y: 0.46 }
     ] }
   ] });
-  station({ id: 'table', name: '소파 테이블', g: tableWrap, acts: [
+  station({ id: 'table', name: '소파 테이블', g: tableWrap, reach: 1.4, acts: [
     { id: 'eat', label: '🍚 밥먹기', fx: 'eat', sound: 'nom', slots: [
-      { x: -0.48, z: -1.10, rot: Math.PI, sit: true, y: 0.30, food: true },
-      { x: -0.48, z: 0.06, rot: 0, sit: true, y: 0.30, food: true }
+      { x: 0.30, z: -0.55, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
+      { x: -1.26, z: -0.55, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
     ] }
   ] });
   station({ id: 'coffee', name: '커피머신', g: rollG, acts: [
     { id: 'coffee', label: '☕ 커피 내리기', fx: 'coffee', sound: 'coffee', slots: [
-      { x: -0.98, z: 1.92, rot: -Math.PI / 2 }
+      { x: -1.36, z: 0.62, rot: -Math.PI / 2 }
     ] }
   ] });
   station({ id: 'shower', name: '샤워부스', acts: [
     { id: 'shower', label: '🚿 샤워하기', fx: 'shower', sound: 'flush', slots: [
-      { x: 1.56, z: 2.28, rot: Math.PI / 2 }
+      { x: 1.98, z: 2.26, rot: Math.PI / 2 }
     ] }
   ] });
   station({ id: 'basin', name: '세면대', acts: [
     { id: 'wash', label: '💧 세수하기', fx: 'wash', sound: 'flush', slots: [
-      { x: 1.36, z: 1.58, rot: Math.PI / 2 }
+      { x: 1.96, z: 1.60, rot: Math.PI / 2 }
     ] }
   ] });
   station({ id: 'toilet', name: '변기', acts: [
     { id: 'poop', label: '🚽 응가하기', fx: 'poop', sound: 'plop', slots: [
-      { x: 1.58, z: 1.00, rot: Math.PI / 2, sit: true, y: 0.42 }
+      { x: 1.10, z: 1.24, rot: 0, sit: true, y: 0.42 }
     ] }
   ] });
-  station({ id: 'sink', name: '싱크대', acts: [
-    { id: 'cook', label: '🍳 요리하기', fx: 'cook', sound: 'cook', slots: [
-      { x: -1.34, z: 2.30, rot: -Math.PI / 2, cook: true }
-    ] },
+  station({ id: 'sink', name: '싱크대 · 인덕션', acts: [
     { id: 'dish', label: '🫧 설거지하기', fx: 'dish', sound: 'dish', slots: [
-      { x: -1.34, z: 2.52, rot: -Math.PI / 2 }
+      { x: -1.66, z: 2.06, rot: -Math.PI / 2 }
+    ] },
+    { id: 'cook', label: '🍳 요리하기', fx: 'cook', sound: 'cook', slots: [
+      { x: -1.66, z: 1.41, rot: -Math.PI / 2, cook: true }
     ] }
   ] });
   station({ id: 'fridge', name: '냉장고', acts: [
     { id: 'fridge', label: '🧊 냉장고 열기', fx: null, sound: 'fridge', slots: [
-      { x: -1.10, z: 1.78, rot: -Math.PI / 2 }
+      { x: -1.66, z: 2.64, rot: -Math.PI / 2 }
     ] }
   ] });
 }
@@ -2482,13 +2761,35 @@ function hideActionBar() {
 }
 
 // ---------- 포즈 ----------
+function partnerSleeping(c) {
+  var keys = Object.keys(chars);
+  for (var i = 0; i < keys.length; i++) {
+    var o = chars[keys[i]];
+    if (o === c || !o.act) continue;
+    if (o.act.actId === 'sleep' && o.mesh && o.mesh.position.distanceTo(c.mesh.position) < 1.4) return true;
+  }
+  return false;
+}
+function partnerNear(c, dist) {
+  var keys = Object.keys(chars), best = null, bd = dist || 1.15;
+  for (var i = 0; i < keys.length; i++) {
+    var o = chars[keys[i]];
+    if (o === c || !o.mesh) continue;
+    var d = Math.hypot(o.mesh.position.x - c.mesh.position.x, o.mesh.position.z - c.mesh.position.z);
+    if (d < bd) { bd = d; best = o; }
+  }
+  return best;
+}
+
 function applyPose(c, t) {
   var mesh = c.mesh, rig = mesh.userData.rig, parts = mesh.userData.parts;
   if (!rig) return;
   var a = c.act;
   var targetY = 0, rigRotX = 0, legRot = 0, legY = 0, legZ = 0, armRot = 0;
+  var headTilt = 0, sway = 0;
+  var kissing = c.kissUntil && c.kissUntil > performance.now();
   if (a && a.s) {
-    if (a.s.lie) { rigRotX = -Math.PI / 2; targetY = (a.s.y || 0.6) + 0.02; }
+    if (a.s.lie) { rigRotX = -Math.PI / 2; targetY = (a.s.y || 0.62) + 0.02; }
     else if (a.s.sit) { targetY = (a.s.y || 0.4) - 0.16; legRot = -1.25; legY = 0.02; legZ = 0.06; }
     if (a.actId === 'game') armRot = -0.8 + Math.sin(t * 14) * 0.25;
     else if (a.actId === 'eat') armRot = -1.1 + Math.sin(t * 5) * 0.5;
@@ -2497,10 +2798,23 @@ function applyPose(c, t) {
     else if (a.actId === 'cook') armRot = -1.2 + Math.sin(t * 8) * 0.3;
     else if (a.actId === 'dish') armRot = -1.1 + Math.sin(t * 4) * 0.35;
     else if (a.actId === 'shower') armRot = -2.3;
-    else if (a.actId === 'sleep') armRot = -0.2;
+    else if (a.actId === 'sleep') {
+      if (partnerSleeping(c)) {
+        // 둘이 끌어안고 자는 포즈 + 하트 · zzZ
+        armRot = -1.55; headTilt = 0.12;
+        sway = Math.sin(t * 1.1) * 0.015;
+        if (t - (c.__lastHeart || 0) > 1.6) {
+          c.__lastHeart = t;
+          addFx(Math.random() < 0.5 ? 'heart' : 'zzz',
+            new THREE.Vector3(mesh.position.x + (Math.random() - 0.5) * 0.3, mesh.position.y + 0.55, mesh.position.z + (Math.random() - 0.5) * 0.2));
+        }
+      } else armRot = -0.2;
+    }
   }
+  if (kissing) { armRot = -2.05; headTilt = 0.18; sway = Math.sin(t * 11) * 0.03; }
   rig.rotation.x += (rigRotX - rig.rotation.x) * 0.2;
   rig.position.y += (targetY - rig.position.y) * 0.2;
+  rig.position.x += (sway - rig.position.x) * 0.15;
   if (parts) {
     if (parts.legL) {
       parts.legL.rotation.x += (legRot - parts.legL.rotation.x) * 0.2;
@@ -2511,12 +2825,30 @@ function applyPose(c, t) {
     if (parts.armL) {
       parts.armL.rotation.x += (armRot - parts.armL.rotation.x) * 0.25;
       parts.armR.rotation.x += (armRot - parts.armR.rotation.x) * 0.25;
+      parts.armL.rotation.z += (0.12 - parts.armL.rotation.z) * 0.2;
+      parts.armR.rotation.z += (-0.12 - parts.armR.rotation.z) * 0.2;
     }
-  }
-  // 앉기/눕기 시 머리 위 아이템
-  if (parts && parts.cup) parts.cup.visible = !!(a && (a.actId === 'coffee' || a.actId === 'eat'));
-  if (parts && parts.cup && parts.cup.visible) {
-    parts.cup.position.set(0.13, 0.34 + Math.sin(t * 3) * 0.01, 0.14);
+    if (parts.head) parts.head.rotation.x += (headTilt - parts.head.rotation.x) * 0.15;
+    // 볼터치 (뽀뽀하면 빨개짐)
+    var bl = c.blush || 0;
+    if (parts.blushL) {
+      parts.blushL.material.opacity = 0.32 + bl * 0.68;
+      parts.blushR.material.opacity = 0.32 + bl * 0.68;
+      parts.blushL.scale.setScalar(1 + bl * 0.55);
+      parts.blushR.scale.setScalar(1 + bl * 0.55);
+    }
+    // 샤워 거품 구름
+    if (parts.bubbleCloud) {
+      var showB = !!(a && a.actId === 'shower');
+      parts.bubbleCloud.visible = showB;
+      if (showB) {
+        parts.bubbleCloud.scale.setScalar(1 + Math.sin(t * 2.6) * 0.04);
+        parts.bubbleCloud.rotation.y = Math.sin(t * 0.5) * 0.2;
+      }
+    }
+    // 손에 든 컵
+    if (parts.cup) parts.cup.visible = !!(a && (a.actId === 'coffee' || a.actId === 'eat'));
+    if (parts.cup && parts.cup.visible) parts.cup.position.set(0.13, 0.34 + Math.sin(t * 3) * 0.01, 0.14);
   }
 }
 
@@ -2525,6 +2857,7 @@ function updateActors(dt) {
   var t = performance.now() * 0.001;
   Object.keys(chars).forEach(function(id) {
     var c = chars[id];
+    if (c.blush) c.blush = Math.max(0, c.blush - dt * 0.16);
     if (!c.act || !c.act.st) { applyPose(c, t); return; }
     var s = c.act.s, st = c.act.st;
     var p = slotPos(st, s);
@@ -2745,12 +3078,9 @@ function animate() {
       var rgtX = Math.cos(camYaw), rgtZ = -Math.sin(camYaw);
       var vx = (fwdX * (-iy) + rgtX * ix) * 0.048;
       var vz = (fwdZ * (-iy) + rgtZ * ix) * 0.048;
-      var nx = Math.max(-1.30, Math.min(1.18, me.mesh.position.x + vx));
-      var nz = Math.max(-1.40, Math.min(2.66, me.mesh.position.z + vz));
-      // TV 가벽(z=0.60)은 현관 쪽에서만 통과 가능하게 막기
-      if (nz > 0.42 && nx > -0.28) nx = -0.28;
-      me.mesh.position.x = nx;
-      me.mesh.position.z = nz;
+      var mx = me.mesh.position.x, mz = me.mesh.position.z;
+      if (!blockedAt(mx + vx, mz)) me.mesh.position.x = mx + vx;
+      if (!blockedAt(me.mesh.position.x, mz + vz)) me.mesh.position.z = mz + vz;
       me.mesh.rotation.y = Math.atan2(vx, vz);
     }
     camTarget.lerp(new THREE.Vector3(me.mesh.position.x, 0.88, me.mesh.position.z), 0.12);
