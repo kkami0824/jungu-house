@@ -2221,14 +2221,7 @@ function updateStationNear() {
   var me = chars[clientId];
   if (!me) return;
   var p = me.mesh.position;
-  // 가까이 있으면 뽀뽀 버튼이 먼저
-  var pr = partnerNear(me, 1.15);
-  if (pr) {
-    var pk = 'kiss|' + pr.name;
-    if (__barKey !== pk) { __barKey = pk; showKissBar(pr); }
-    nearStation = null;
-    return;
-  }
+  var pr0 = partnerNear(me, 1.15);
   var best = null, bd = 99;
   stations.forEach(function(st) {
     st.acts.forEach(function(a) {
@@ -2245,7 +2238,12 @@ function updateStationNear() {
   }).join(',');
   if (bd < (best && best.reach ? best.reach : 1.3)) {
     nearStation = best;
-    if (best.id + '|' + key !== __barKey) { __barKey = best.id + '|' + key; showActionBar(best); }
+    var k2 = (pr0 ? '|k' : '') + key;
+    if (best.id + '|' + k2 !== __barKey) { __barKey = best.id + '|' + k2; showActionBar(best); }
+  } else if (pr0) {
+    var pk = 'kiss|' + pr0.name;
+    if (__barKey !== pk) { __barKey = pk; showKissBar(pr0); }
+    nearStation = null;
   } else if (!pinnedStation || performance.now() > pinnedUntil) {
     nearStation = null; __barKey = '';
     hideActionBar();
@@ -2768,6 +2766,14 @@ function showActionBar(st) {
     b.onclick = function(e) { e.stopPropagation(); startAction(st, a); };
     box.appendChild(b);
   });
+  var pr = chars[clientId] ? partnerNear(chars[clientId], 1.15) : null;
+  if (pr) {
+    var kb = document.createElement('button');
+    kb.className = 'act-btn kiss';
+    kb.textContent = '😘 뽀뽀하기';
+    kb.onclick = function(e) { e.stopPropagation(); doKiss(pr); };
+    box.appendChild(kb);
+  }
   bar.classList.add('show');
 }
 function hideActionBar() {
