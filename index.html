@@ -358,11 +358,18 @@ addBox(4.0, 0.015, 0.9, 0xdad5cf, 0, 0.008, 2.55, scene, false);
 addBox(0.08, 2.4, 6.0, 0xfbf7f2, -2.04, 1.2, 0, scene, true);
 // 오른쪽 벽 (X = +2.04)
 addBox(0.08, 2.4, 6.0, 0xfbf7f2, 2.04, 1.2, 0, scene, true);
+// ================== 현관문(가운데보다 약간 왼쪽) + 오른쪽 신발장·거울 ==================
 // 현관 남쪽 벽 (Z = +3.04)
 addBox(4.16, 2.4, 0.08, 0xf8f3ee, 0, 1.2, 3.04, scene, true);
-// 현관문 (중앙 Z = +2.99)
-addBox(0.95, 2.05, 0.06, 0x8e9aa6, -0.1, 1.03, 2.98, scene, true);
-addBox(0.05, 0.14, 0.08, 0xd8dce0, 0.28, 1.02, 2.95, scene, false);
+// 현관문 (가운데보다 조금 왼쪽 X = -0.35, Z = +2.98)
+addBox(0.92, 2.05, 0.06, 0x8e9aa6, -0.35, 1.03, 2.98, scene, true);
+addBox(0.05, 0.14, 0.08, 0xd8dce0, 0.02, 1.02, 2.95, scene, false);
+
+// 현관 오른쪽 신발장 + 전신거울 (X: +0.35 ~ +1.98, Z: +2.50 ~ +2.98)
+addBox(1.55, 2.15, 0.42, 0xf5f2ed, 1.20, 1.075, 2.76, scene, true);
+addBox(0.02, 2.05, 0.02, 0xded7ce, 0.92, 1.075, 2.54, scene, false);
+// 신발장 전신거울
+addBox(0.46, 1.55, 0.02, 0xd9ecfa, 0.68, 1.15, 2.54, scene, false);
 
 // 정면 북쪽 벽 & 통창문 (Z = -3.04)
 addBox(4.16, 0.55, 0.08, 0xfbf7f2, 0, 0.275, -3.04, scene, true); // 창 아래 벽
@@ -403,29 +410,29 @@ addBox(0.04, 0.22, 0.04, 0xb8c0c8, -1.85, 0.99, 1.36, scene, false);  // 수전
 addBox(0.36, 0.02, 0.38, 0x33373d, -1.65, 0.89, 0.84, scene, false);  // 인덕션
 addBox(0.38, 0.56, 1.18, 0xfaf7f2, -1.79, 1.88, 1.16, scene, true);   // 상부장
 
-// ================== 현관 오른쪽: 화장실 (변기 / 세면대 / 샤워부스) + 외벽 벽걸이 TV ==================
-// 화장실 구역: X [+0.25 ~ +2.0], Z [+0.95 ~ +2.98]
-// 화장실 바닥 타일
-addBox(1.75, 0.02, 2.0, 0xe8eef2, 1.12, 0.01, 1.98, scene, false);
-// 화장실 왼쪽 벽 (X = +0.25, Z: +0.95 ~ +2.3) + 문틀
-addBox(0.08, 2.25, 1.35, 0xfdfbf8, 0.25, 1.125, 1.62, scene, true);
-// 화장실 문 (Z: +2.3 ~ +2.98, 피벗 회전!)
+// ================== 현관 오른쪽 안쪽: 화장실 (변기 / 세면대 / 샤워부스) + 외벽 벽걸이 TV ==================
+// 화장실 구역: X [+0.15 ~ +2.0], Z [+0.65 ~ +2.45] (신발장 거울 안쪽, 문은 왼쪽 벽 가운데보다 앞쪽)
+addBox(1.85, 0.02, 1.80, 0xe8eef2, 1.07, 0.01, 1.55, scene, false);
+// 화장실 왼쪽 벽: 문틀 양쪽 벽 + 문
+addBox(0.08, 2.25, 0.48, 0xfdfbf8, 0.15, 1.125, 0.89, scene, true);
+addBox(0.08, 2.25, 0.64, 0xfdfbf8, 0.15, 1.125, 2.13, scene, true);
+// 화장실 문 (Z: +1.13 ~ +1.81, 피벗 회전!)
 var doorPivot = new THREE.Group();
-doorPivot.position.set(0.25, 0, 2.30);
+doorPivot.position.set(0.15, 0, 1.13);
 scene.add(doorPivot);
-var bathDoor = addBox(0.06, 2.05, 0.66, 0xf0e6dc, 0, 1.025, 0.33, doorPivot, true);
-addBox(0.08, 0.12, 0.05, 0xc7b8aa, 0, 1.02, 0.56, doorPivot, false); // 손잡이
+var bathDoor = addBox(0.06, 2.05, 0.68, 0xf0e6dc, 0, 1.025, 0.34, doorPivot, true);
+addBox(0.08, 0.12, 0.05, 0xc7b8aa, 0, 1.02, 0.58, doorPivot, false); // 손잡이
 var doorOpen = false;
 function toggleDoor() { doorOpen = !doorOpen; }
 
-// 화장실 안쪽(북쪽) 벽 — 여기가 방(침대)에서 현관 쪽 바라볼 때 정면 벽! (Z = +0.95, X: +0.25 ~ +2.0)
-var tvWall = addBox(1.75, 2.25, 0.08, 0xfbf7f2, 1.12, 1.125, 0.95, scene, true);
+// 화장실 안쪽(북쪽) 벽 — 침대/거실에서 현관 쪽 바라볼 때 정면 벽 (Z = +0.65, X: +0.15 ~ +2.0)
+var tvWall = addBox(1.85, 2.25, 0.08, 0xfbf7f2, 1.07, 1.125, 0.65, scene, true);
 
-// ★ 화장실 외벽에 걸린 벽걸이 TV (북쪽 면 Z = +0.90) ★
-addBox(1.06, 0.62, 0.05, 0x26282c, 1.12, 1.35, 0.89, scene, false);
+// ★ 화장실 외벽에 걸린 벽걸이 TV (북쪽 면 Z = +0.60) ★
+addBox(1.06, 0.62, 0.05, 0x26282c, 1.07, 1.35, 0.59, scene, false);
 var tvScreenMat = new THREE.MeshStandardMaterial({ color: 0x3b4d6b, emissive: 0x243b55, emissiveIntensity: 0.7, roughness: 0.2 });
 var tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.54), tvScreenMat);
-tvScreen.position.set(1.12, 1.35, 0.86);
+tvScreen.position.set(1.07, 1.35, 0.56);
 tvScreen.rotation.y = Math.PI;
 scene.add(tvScreen);
 var tvOn = true;
@@ -435,38 +442,41 @@ function toggleTV() {
   tvScreenMat.color.setHex(tvOn ? 0x3b4d6b : 0x16181c);
 }
 
-// 화장실 내부: 문(X=+0.25) 열고 들어가면
-// 1) 왼쪽(Z=+1.35, X=+0.60): 변기
-addBox(0.40, 0.36, 0.46, 0xffffff, 0.60, 0.18, 1.24, scene, false); // 변기 하부
-addBox(0.42, 0.42, 0.18, 0xffffff, 0.60, 0.54, 1.10, scene, false); // 물탱크
-addBox(0.38, 0.04, 0.40, 0xf0f4f8, 0.60, 0.38, 1.28, scene, false); // 시트
-// 2) 가운데(Z=+1.22, X=+1.15): 세면대 + 거울
-addBox(0.46, 0.14, 0.38, 0xffffff, 1.15, 0.78, 1.18, scene, false); // 세면볼
-addBox(0.16, 0.72, 0.16, 0xf2f4f7, 1.15, 0.36, 1.15, scene, false); // 기둥
-addBox(0.44, 0.56, 0.03, 0xd8ecfa, 1.15, 1.42, 1.01, scene, false); // 거울
-// 3) 오른쪽(Z=+1.35, X=+1.72): 샤워부스 (유리 파티션 + 샤워기)
+// 화장실 내부: 문(X=+0.15) 열고 들어가면 좌→우로 [왼쪽 변기 / 가운데 세면대 / 오른쪽 샤워부스]
+// 1) 왼쪽(Z=+0.96, X=+0.52): 변기
+addBox(0.38, 0.36, 0.44, 0xffffff, 0.52, 0.18, 0.96, scene, false); // 변기 하부
+addBox(0.40, 0.42, 0.16, 0xffffff, 0.52, 0.54, 0.80, scene, false); // 물탱크
+addBox(0.36, 0.04, 0.38, 0xf0f4f8, 0.52, 0.38, 1.00, scene, false); // 시트
+// 2) 가운데(Z=+0.90, X=+1.08): 세면대 + 거울
+addBox(0.46, 0.14, 0.38, 0xffffff, 1.08, 0.78, 0.90, scene, false); // 세면볼
+addBox(0.16, 0.72, 0.16, 0xf2f4f7, 1.08, 0.36, 0.87, scene, false); // 기둥
+addBox(0.44, 0.56, 0.03, 0xd8ecfa, 1.08, 1.42, 0.71, scene, false); // 거울
+// 3) 오른쪽(Z=+1.15, X=+1.68): 샤워부스 (유리 파티션 + 샤워기)
 var showerGlass = new THREE.Mesh(
-  new THREE.BoxGeometry(0.03, 1.95, 0.85),
+  new THREE.BoxGeometry(0.03, 1.95, 0.95),
   new THREE.MeshStandardMaterial({ color: 0xdff2ff, transparent: true, opacity: 0.42, roughness: 0.1 })
 );
-showerGlass.position.set(1.44, 0.98, 1.42);
+showerGlass.position.set(1.40, 0.98, 1.15);
 scene.add(showerGlass);
-addBox(0.05, 0.65, 0.05, 0xc8d0d8, 1.94, 1.48, 1.28, scene, false); // 샤워기 바
-addBox(0.14, 0.04, 0.14, 0xd8e0e8, 1.84, 1.82, 1.28, scene, false); // 해바라기 헤드
+addBox(0.05, 0.65, 0.05, 0xc8d0d8, 1.94, 1.48, 1.02, scene, false); // 샤워기 바
+addBox(0.14, 0.04, 0.14, 0xd8e0e8, 1.84, 1.82, 1.02, scene, false); // 해바라기 헤드
 
 // ================== 안쪽 생활 공간 ==================
-// 1) 왼쪽 벽 붙박이장 (X: -1.68, Z: -1.75 ~ +0.40)
-addBox(0.62, 2.22, 2.15, 0xfcfaf7, -1.69, 1.11, -0.68, scene, true);
-addBox(0.02, 2.14, 0.02, 0xe2dbd4, -1.37, 1.11, -0.68, scene, false); // 문선
-addBox(0.02, 2.14, 0.02, 0xe2dbd4, -1.37, 1.11, -1.22, scene, false);
-addBox(0.02, 2.14, 0.02, 0xe2dbd4, -1.37, 1.11, -0.14, scene, false);
+// 1) 왼쪽 벽 붙박이장 (싱크대 끝 Z=+0.55부터 창가 침대 끝 Z=-2.96까지 쭉!)
+addBox(0.60, 2.34, 3.52, 0xfaf7f2, -1.70, 1.17, -1.20, scene, true);
+addBox(0.03, 0.06, 3.52, 0xeae3da, -1.39, 2.32, -1.20, scene, false); // 상단 몰딩
+addBox(0.03, 0.06, 3.52, 0xeae3da, -1.39, 0.03, -1.20, scene, false); // 걸레받이
+for (var wz = -2.40; wz <= 0.10; wz += 0.58) {
+  addBox(0.02, 2.24, 0.02, 0xdcd4ca, -1.39, 1.17, wz, scene, false); // 문짝 틈
+  addBox(0.02, 0.26, 0.02, 0xc7beb4, -1.38, 1.15, wz + 0.06, scene, false); // 세로 손잡이
+}
 
-// 2) 정면 통창 앞 가로 침대 (방 폭에 딱 맞게! Z: -2.35, X: -1.25 ~ +1.25 -> 길이 2.1m, 폭 1.25m)
-addBox(2.20, 0.28, 1.22, 0xe3cbb1, -0.35, 0.14, -2.35, scene, true); // 침대 프레임
-addBox(2.12, 0.20, 1.14, 0xffffff, -0.35, 0.36, -2.35, scene, true); // 매트리스
-addBox(1.55, 0.12, 1.16, 0xffe3ec, -0.05, 0.47, -2.35, scene, true); // 파스텔 핑크 이불
-addBox(0.32, 0.12, 0.48, 0xfff8f2, -1.20, 0.50, -2.58, scene, false); // 베개1
-addBox(0.32, 0.12, 0.48, 0xfff8f2, -1.20, 0.50, -2.08, scene, false); // 베개2
+// 2) 정면 통창 앞 가로 침대 (오른쪽이 침대 머리! 왼쪽 붙박이장 옆에 딱 붙음)
+addBox(2.20, 0.28, 1.22, 0xe3cbb1, -0.25, 0.14, -2.35, scene, true); // 침대 프레임
+addBox(2.12, 0.20, 1.14, 0xffffff, -0.25, 0.36, -2.35, scene, true); // 매트리스
+addBox(1.55, 0.12, 1.16, 0xffe3ec, -0.55, 0.47, -2.35, scene, true); // 파스텔 핑크 이불 (왼쪽 발치)
+addBox(0.32, 0.12, 0.48, 0xfff8f2, 0.62, 0.50, -2.58, scene, false); // 베개1 (오른쪽 머리!)
+addBox(0.32, 0.12, 0.48, 0xfff8f2, 0.62, 0.50, -2.08, scene, false); // 베개2 (오른쪽 머리!)
 
 // 러그 (거실 중앙 파스텔 크림 러그)
 addBox(1.6, 0.02, 1.7, 0xfaf0e6, 0.15, 0.01, -0.55, scene, true);
