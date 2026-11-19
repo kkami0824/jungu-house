@@ -950,28 +950,28 @@ addRBox(0.92, 0.20, 0.03, 0.02, mat(0xd9b58d, 0.8), 0.58, 0.17, 0.675, bedG, fal
 addRBox(0.11, 0.03, 0.03, 0.012, mat(0xb98a5d, 0.7), -0.52, 0.17, 0.695, bedG, false);
 addRBox(0.11, 0.03, 0.03, 0.012, mat(0xb98a5d, 0.7), 0.58, 0.17, 0.695, bedG, false);
 // 매트리스 (솜이불 느낌)
-addRBox(2.00, 0.22, 1.32, 0.07, cottonMat, 0, 0.45, 0, bedG, true);
+addRBox(2.00, 0.24, 1.32, 0.08, cottonMat, 0, 0.44, 0, bedG, true);
 // 이불 (부풀어 오른 볼륨 + 둥근 모서리)
-addRBox(1.60, 0.17, 1.40, 0.075, duvetMat, -0.34, 0.575, 0, bedG, true);
-addSphere(0.72, 0.055, 0.60, 0xffffff, -0.72, 0.635, -0.28, bedG, 0.99);
-addSphere(0.66, 0.05, 0.55, 0xffffff, -0.30, 0.645, 0.26, bedG, 0.99);
-addSphere(0.60, 0.045, 0.50, 0xffffff, -0.02, 0.635, -0.10, bedG, 0.99);
+addRBox(1.62, 0.24, 1.42, 0.10, duvetMat, -0.34, 0.61, 0, bedG, true);
+addSphere(0.74, 0.075, 0.62, 0xfdfaf5, -0.72, 0.72, -0.28, bedG, 0.99);
+addSphere(0.68, 0.07, 0.57, 0xfdfaf5, -0.30, 0.73, 0.26, bedG, 0.99);
+addSphere(0.62, 0.065, 0.52, 0xfdfaf5, -0.02, 0.72, -0.10, bedG, 0.99);
 // 이불 윗단을 살짝 접어 올린 롤
-var duvetRoll = addCyl(0.062, 0.062, 1.34, 0xfdfaf4, 0.44, 0.615, 0, bedG, 14, 0.97);
+var duvetRoll = addCyl(0.075, 0.075, 1.36, 0xfdfaf4, 0.44, 0.66, 0, bedG, 14, 0.97);
 duvetRoll.rotation.x = Math.PI / 2;
 duvetRoll.material = duvetMat;
 // 이불 끝단이 살짝 흘러내린 느낌
-addRBox(1.62, 0.06, 1.44, 0.03, duvetMat, -0.34, 0.545, 0, bedG, false);
+addRBox(1.64, 0.07, 1.46, 0.03, duvetMat, -0.34, 0.575, 0, bedG, false);
 // 베개 2개 (오른쪽 머리맡 · 폭신)
-var pil1 = addRBox(0.34, 0.16, 0.46, 0.07, cottonMat, 0.80, 0.64, -0.28, bedG, true);
+var pil1 = addRBox(0.34, 0.17, 0.46, 0.08, cottonMat, 0.80, 0.68, -0.28, bedG, true);
 pil1.rotation.y = 0.06;
-var pil2 = addRBox(0.34, 0.16, 0.46, 0.07, cottonMat, 0.80, 0.64, 0.28, bedG, true);
+var pil2 = addRBox(0.34, 0.17, 0.46, 0.08, cottonMat, 0.80, 0.68, 0.28, bedG, true);
 pil2.rotation.y = -0.05;
-addSphere(0.17, 0.045, 0.23, 0xffffff, 0.80, 0.71, -0.28, bedG, 0.98);
-addSphere(0.17, 0.045, 0.23, 0xffffff, 0.80, 0.71, 0.28, bedG, 0.98);
+addSphere(0.17, 0.045, 0.23, 0xffffff, 0.80, 0.755, -0.28, bedG, 0.98);
+addSphere(0.17, 0.045, 0.23, 0xffffff, 0.80, 0.755, 0.28, bedG, 0.98);
 // 발치 니트 담요
-addRBox(0.62, 0.10, 1.38, 0.045, knitMat, -0.82, 0.63, 0, bedG, true);
-addRBox(0.07, 0.15, 1.36, 0.03, knitMat, -0.52, 0.585, 0, bedG, false);
+addRBox(0.62, 0.10, 1.40, 0.045, knitMat, -0.82, 0.72, 0, bedG, true);
+addRBox(0.07, 0.16, 1.38, 0.03, knitMat, -0.52, 0.67, 0, bedG, false);
 
 var bedWrap = registerFurniture('침대', bedG);
 // 창틀 인형 4총사
@@ -1314,8 +1314,8 @@ var BATH_W = 0.55, BATH_E = 2.55, BATH_N = 0.80, BATH_S = 2.55;
 addBox(2.00, 0.02, 1.75, 0xeef1f3, 1.55, 0.012, 1.675, scene, false);
 addBox(0.72, 0.015, 0.60, 0xdfe9ee, 2.10, 0.02, 2.24, scene, false); // 샤워부스 바닥
 // 가벽 (TV 벽)
-addBox(2.00, RH, 0.10, WALL2, 1.55, RH / 2, 0.80, scene, true);
-addBox(2.00, 0.06, 0.14, 0xf0e6da, 1.55, RH - 0.05, 0.80, scene, false);
+addBox(2.00, 1.55, 0.10, WALL2, 1.55, 0.775, 0.80, scene, true);
+addBox(2.00, 0.06, 0.14, 0xf0e6da, 1.55, 1.57, 0.80, scene, false);
 // 화장실 서쪽 벽 (복도 쪽 · 문 포함)
 addBox(0.08, 2.36, 0.72, WALL2, 0.55, 1.18, 1.16, scene, true);
 addBox(0.08, 2.36, 0.37, WALL2, 0.55, 1.18, 2.365, scene, true);
@@ -1386,9 +1386,9 @@ addBox(0.10, 0.16, 0.08, 0xd8e2ea, 1.42, 1.14, 2.76, scene, false);
 var tvScreenMat = new THREE.MeshStandardMaterial({
   map: pitchTex, roughness: 0.32, metalness: 0.0, emissive: 0xffffff, emissiveMap: pitchTex, emissiveIntensity: 0.42
 });
-addBox(1.36, 0.80, 0.06, 0x24262a, 1.30, 1.50, 0.735, scene, false);
+addBox(1.36, 0.76, 0.06, 0x24262a, 1.30, 1.14, 0.735, scene, false);
 var tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.28, 0.72), tvScreenMat);
-tvScreen.position.set(1.30, 1.50, 0.702);
+tvScreen.position.set(1.30, 1.14, 0.702);
 tvScreen.rotation.y = Math.PI;
 scene.add(tvScreen);
 var tvOn = true;
@@ -1457,7 +1457,7 @@ registerFurniture('트롤리', trolleyG);
 
 // 화이트 스탠드 서큘레이터
 var fanG = new THREE.Group();
-fanG.position.set(1.50, 0, -2.28);
+fanG.position.set(2.38, 0, -2.78);
 scene.add(fanG);
 addCyl(0.16, 0.17, 0.03, 0xf6f4f0, 0, 0.02, 0, fanG, 20);
 addCyl(0.045, 0.045, 0.52, 0xf8f6f2, 0, 0.28, 0, fanG, 12);
@@ -1477,7 +1477,7 @@ addBox(0.22, 0.16, 0.10, 0xf8f6f2, 0, -0.14, -0.12, fanHead, false);
 
 // 블랙 플로어 스탠드 조명 (따뜻한 불빛)
 var lampG = new THREE.Group();
-lampG.position.set(1.58, 0, -2.64);
+lampG.position.set(1.80, 0, -2.80);
 scene.add(lampG);
 addCyl(0.16, 0.17, 0.025, 0x1f1f21, 0, 0.012, 0, lampG, 20);
 addCyl(0.016, 0.016, 1.68, 0x232325, 0, 0.86, 0, lampG, 10);
@@ -2586,8 +2586,8 @@ blk(-1.36, -0.98, -0.20, -0.14);
 // TV 존 (서랍장 · 트롤리 · 서큘레이터 · 램프)
 blk(0.96, 0.40, 1.66, 0.80);
 blk(0.58, 0.42, 1.02, 0.84);
-blk(1.30, -2.46, 1.70, -2.10);
-blk(1.38, -2.84, 1.78, -2.44);
+blk(1.56, -2.98, 2.04, -2.58);
+blk(2.16, -2.98, 2.56, -2.58);
 // 화장실 벽
 blk(0.49, 0.74, 2.60, 0.87);       // TV 가벽
 blk(0.49, 0.80, 0.62, 1.53);       // 서쪽 벽 (문 앞)
@@ -2637,8 +2637,8 @@ function slotRot(st, s) { return (s.rot || 0) + (st.g ? st.g.rotation.y : 0); }
 function buildStations() {
   station({ id: 'bed', name: '침대', g: bedWrap, reach: 1.5, acts: [
     { id: 'sleep', label: '😴 잠자기', fx: 'sleep', sound: 'bed', slots: [
-      { x: -0.34, z: -2.42, rot: -Math.PI / 2, lie: true, y: 0.64 },
-      { x: -0.34, z: -2.02, rot: -Math.PI / 2, lie: true, y: 0.64 }
+      { x: -0.34, z: -2.42, rot: -Math.PI / 2, lie: true, y: 0.74 },
+      { x: -0.34, z: -2.02, rot: -Math.PI / 2, lie: true, y: 0.74 }
     ] }
   ] });
   station({ id: 'desk', name: '컴퓨터 책상', g: deskWrap, acts: [
