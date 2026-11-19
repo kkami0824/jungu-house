@@ -318,11 +318,11 @@ var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHei
 function camDefault() {
   var asp = window.innerWidth / window.innerHeight;
   if (asp < 0.85) {
-    camera.fov = 66;
-    camYaw = 0.10; camPitch = 0.86; camDist = 6.8;
+    camera.fov = 64;
+    camYaw = 0.06; camPitch = 0.98; camDist = 7.4;
   } else {
     camera.fov = 50;
-    camYaw = 0.10; camPitch = 0.80; camDist = 5.2;
+    camYaw = 0.06; camPitch = 0.95; camDist = 5.8;
   }
   camera.updateProjectionMatrix();
 }
@@ -870,6 +870,10 @@ addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.24, 0.05, 0.02, sofaG, 8);
 addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.90, 0.05, -1.26, sofaG, 8);
 addCyl(0.03, 0.03, 0.10, 0x6d5a48, 1.90, 0.05, 0.02, sofaG, 8);
 
+// 소파 등받이에 걸친 니트 담요
+var sofaThrow = addMesh(new THREE.BoxGeometry(0.30, 0.30, 0.60), new THREE.MeshStandardMaterial({map: stripeTex, roughness: 0.95}), 1.86, 0.66, -1.18, sofaG, true);
+sofaThrow.rotation.z = 0.06;
+
 // 치이카와 얼굴 쿠션
 var cush = new THREE.Group();
 cush.position.set(1.62, 0.60, -0.42);
@@ -912,7 +916,7 @@ addSphere(0.045, 0.035, 0.035, 0xd8b489, -0.12, 0.035, -0.06, dogG, 0.95);
 addSphere(0.05, 0.03, 0.03, 0xc9a173, -0.17, 0.075, 0, dogG, 0.95);       // 꼬리
 
 // ================== 러그 + 조약돌 테이블 ==================
-var rugTexMat = new THREE.MeshStandardMaterial({map: rugTex, roughness: 0.98, color: 0xfffaf2});
+var rugTexMat = new THREE.MeshStandardMaterial({map: rugTex, roughness: 0.98, color: 0xf4e8d8});
 var rug = new THREE.Mesh(new THREE.PlaneGeometry(2.66, 2.28), rugTexMat);
 rug.rotation.x = -Math.PI / 2;
 rug.position.set(-0.22, 0.008, -0.55);
