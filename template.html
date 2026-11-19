@@ -1032,17 +1032,20 @@ addCyl(0.02, 0.02, 0.04, 0x4f9fd0, 0.02, 1.15, 0.22, rollG, 10);
 addBox(0.10, 0.05, 0.005, 0xe08a3c, 0.06, 1.02, 0.115, rollG, false);
 
 // ================== 화장실 + TV 가벽 ==================
+// 화장실: X -0.10 ~ +2.0 / Z +0.60 ~ +2.55 (문은 복도 쪽 서쪽 벽)
 // 화장실 바닥 (타일)
-addBox(2.10, 0.02, 2.38, 0xeef1f3, 0.95, 0.012, 1.79, scene, false);
-// 가벽 (TV 벽) — X -0.10 ~ +2.0, Z = +0.60
+addBox(2.06, 0.02, 1.95, 0xeef1f3, 0.95, 0.012, 1.575, scene, false);
+addBox(0.72, 0.015, 0.62, 0xdfe9ee, 1.58, 0.02, 2.26, scene, false); // 샤워부스 바닥
+// 가벽 (TV 벽) — 거실 쪽 외벽에 벽걸이 TV
 var tvWall = addBox(2.10, 2.36, 0.10, WALL2, 0.95, 1.18, 0.60, scene, true);
-// 가벽 상단 몰딩
 addBox(2.10, 0.06, 0.14, 0xf0e6da, 0.95, 2.35, 0.60, scene, false);
-// 화장실 서쪽 벽 (문틀 포함)
-addBox(0.08, 2.36, 0.72, WALL2, -0.10, 1.18, 0.98, scene, true);
-addBox(0.08, 2.36, 1.02, WALL2, -0.10, 1.18, 2.49, scene, true);
+// 화장실 서쪽 벽 (복도 쪽 · 문 포함)
+addBox(0.08, 2.36, 0.74, WALL2, -0.10, 1.18, 0.97, scene, true);
+addBox(0.08, 2.36, 0.57, WALL2, -0.10, 1.18, 2.265, scene, true);
 addBox(0.08, 0.36, 0.70, WALL2, -0.10, 2.18, 1.66, scene, true); // 문 위 인방
-// 화장실 문 (피벗 회전)
+// 화장실 남쪽 벽 (신발장 쪽)
+addBox(2.10, 2.36, 0.08, WALL2, 0.95, 1.18, 2.55, scene, true);
+// 화장실 문 (피벗 회전 · 복도로 열림)
 var doorPivot = new THREE.Group();
 doorPivot.position.set(-0.10, 0, 1.32);
 scene.add(doorPivot);
@@ -1052,33 +1055,57 @@ addBox(0.055, 0.10, 0.045, 0xb9ab9c, 0, 1.00, 0.60, doorPivot, false);
 var doorOpen = false;
 function toggleDoor() { doorOpen = !doorOpen; }
 
-// 화장실 내부
-addBox(0.38, 0.36, 0.44, 0xfdfcf9, 0.35, 0.18, 0.95, scene, false); // 변기 하부
-addBox(0.40, 0.40, 0.16, 0xfdfcf9, 0.35, 0.52, 0.80, scene, false); // 물탱크
-addBox(0.38, 0.04, 0.40, 0xf6f8fa, 0.35, 0.37, 0.99, scene, false); // 시트
-addBox(0.44, 0.12, 0.36, 0xfdfcf9, 1.02, 0.78, 0.90, scene, false); // 세면볼
-addBox(0.14, 0.72, 0.14, 0xf2f4f7, 1.02, 0.36, 0.87, scene, false);
-addBox(0.42, 0.54, 0.03, 0xdcf0fb, 1.02, 1.44, 0.70, scene, false); // 거울
-addBox(0.02, 0.16, 0.02, 0xc2c9d0, 1.02, 0.92, 0.80, scene, false); // 수전
+// ---- 화장실 내부: 문 열고 들어가 오른쪽(동쪽) 벽을 마주보면
+//      왼쪽 = 변기 / 가운데 = 세면대 / 오른쪽 = 샤워부스 ----
+// 1) 변기 (왼쪽 · TV 벽 쪽)
+addBox(0.40, 0.36, 0.42, 0xfdfcf9, 1.62, 0.18, 1.00, scene, true);
+addBox(0.42, 0.05, 0.44, 0xf4f8fb, 1.62, 0.375, 1.00, scene, false);
+addBox(0.18, 0.44, 0.44, 0xfdfcf9, 1.87, 0.55, 1.00, scene, false);
+addBox(0.19, 0.04, 0.30, 0xf2f6f9, 1.87, 0.79, 1.00, scene, false);
+addBox(0.24, 0.03, 0.26, 0xeef4f8, 1.60, 0.41, 1.00, scene, false); // 시트 커버
+// 2) 세면대 (가운데 · 동쪽 벽)
+addBox(0.38, 0.12, 0.50, 0xfdfcf9, 1.79, 0.80, 1.58, scene, true);
+addBox(0.34, 0.02, 0.44, 0xdfe7ec, 1.79, 0.865, 1.58, scene, false);
+addBox(0.14, 0.72, 0.14, 0xf2f4f7, 1.79, 0.36, 1.58, scene, false);
+addBox(0.02, 0.20, 0.02, 0xc2c9d0, 1.95, 0.98, 1.58, scene, false); // 수전
+addBox(0.03, 0.60, 0.46, 0xdcf0fb, 1.955, 1.45, 1.58, scene, false); // 거울 (동쪽 벽)
+addBox(0.05, 0.03, 0.10, 0xe8eef2, 1.94, 1.78, 1.58, scene, false); // 거울등
+// 3) 샤워부스 (오른쪽 · 현관/신발장 쪽)
 var showerGlass = new THREE.Mesh(
-  new THREE.BoxGeometry(0.03, 1.95, 1.00),
-  new THREE.MeshStandardMaterial({ color: 0xdff2ff, transparent: true, opacity: 0.36, roughness: 0.08 })
+  new THREE.BoxGeometry(0.84, 1.95, 0.03),
+  new THREE.MeshStandardMaterial({ color: 0xdff2ff, transparent: true, opacity: 0.32, roughness: 0.08 })
 );
-showerGlass.position.set(1.42, 0.98, 1.72);
+showerGlass.position.set(1.54, 0.98, 2.03);
 scene.add(showerGlass);
-addBox(0.05, 0.60, 0.05, 0xc8d0d8, 1.94, 1.50, 2.20, scene, false);
-addCyl(0.10, 0.10, 0.02, 0xd8e0e8, 1.94, 1.78, 2.14, scene, 16);
+addBox(0.03, 1.95, 0.04, 0xc6d3da, 1.12, 0.98, 2.03, scene, false); // 유리 모서리
+addBox(0.05, 0.62, 0.05, 0xc8d0d8, 1.93, 1.52, 2.30, scene, false);  // 샤워기 바
+addCyl(0.10, 0.10, 0.02, 0xd8e0e8, 1.88, 1.82, 2.28, scene, 16);     // 헤드
+addBox(0.26, 0.03, 0.16, 0xe8eef2, 1.92, 1.10, 2.28, scene, false);  // 샴푸 선반
+addBox(0.06, 0.12, 0.06, 0xf2f2ee, 1.90, 1.18, 2.24, scene, false);
+addBox(0.05, 0.10, 0.05, 0xd8e8c8, 1.90, 1.17, 2.32, scene, false);
+// 화장실 소품 (발매트 · 수건 · 화장지)
+addBox(0.52, 0.012, 0.34, 0xd8e4ec, 1.28, 0.02, 1.55, scene, false);
+addCyl(0.012, 0.012, 0.40, 0xc8ced4, 0.55, 1.46, 0.66, scene, 8).rotation.z = Math.PI / 2;
+addBox(0.28, 0.40, 0.02, 0xf4f7f9, 0.55, 1.26, 0.68, scene, false);
+addBox(0.10, 0.12, 0.10, 0xfbf7f0, 1.60, 0.62, 1.24, scene, false);
 // 화장실 내부 조명
 var bathLight = new THREE.PointLight(0xf2f7ff, 0.5, 3.2, 2);
-bathLight.position.set(0.95, 2.1, 1.6);
+bathLight.position.set(0.95, 2.05, 1.6);
 scene.add(bathLight);
-// 화장실 소품 (발매트 · 타월 · 선반)
-addBox(0.60, 0.012, 0.40, 0xd8e4ec, 0.62, 0.018, 1.28, scene, false);
-addCyl(0.012, 0.012, 0.44, 0xc8ced4, 1.60, 1.42, 0.68, scene, 8).rotation.z = Math.PI / 2;
-addBox(0.34, 0.42, 0.02, 0xf4f7f9, 1.60, 1.24, 0.70, scene, false);
-addBox(0.44, 0.018, 0.16, 0xf4f7f9, 0.62, 1.28, 0.68, scene, false);
-addBox(0.06, 0.10, 0.05, 0xa8d0a0, 0.55, 1.34, 0.68, scene, false);
-addBox(0.05, 0.12, 0.05, 0xf0d8a8, 0.66, 1.35, 0.68, scene, false);
+
+// ================== 현관 신발장 (화장실 남쪽 · 현관문 옆) ==================
+addBox(1.02, 1.04, 0.34, 0xf8f4ee, 0.78, 0.52, 2.79, scene, true);
+addBox(0.98, 0.02, 0.36, 0xefe7dc, 0.78, 1.055, 2.79, scene, true);
+addBox(0.014, 0.86, 0.01, 0xe2d8cb, 0.78, 0.52, 2.615, scene, false);
+addBox(0.12, 0.025, 0.025, 0xd9c3a8, 0.72, 0.68, 2.60, scene, false);
+addBox(0.12, 0.025, 0.025, 0xd9c3a8, 0.84, 0.68, 2.60, scene, false);
+// 신발장 위 소품
+addBox(0.16, 0.09, 0.12, 0xefe4d5, 0.55, 1.11, 2.78, scene, false);
+addBox(0.10, 0.16, 0.08, 0xd8e2ea, 1.02, 1.14, 2.78, scene, false);
+// 전신거울 (현관 쪽 벽)
+addBox(0.46, 1.52, 0.03, 0xd9ecfa, 1.62, 1.16, 2.945, scene, false);
+addBox(0.50, 0.04, 0.05, 0xe8ded1, 1.62, 1.94, 2.93, scene, false);
+addBox(0.50, 0.04, 0.05, 0xe8ded1, 1.62, 0.38, 2.93, scene, false);
 
 // 벽걸이 TV (가벽 북쪽 면)
 var tvScreenMat = new THREE.MeshStandardMaterial({
