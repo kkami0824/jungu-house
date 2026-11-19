@@ -314,7 +314,20 @@ scene.background = new THREE.Color(0xf1e7de);
 scene.fog = new THREE.Fog(0xe9dccb, 26, 950);
 
 var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 3000);
+// 세로(폰) 화면에서는 시야를 넓히고 더 멀리서 방 전체가 담기게
+function camDefault() {
+  var asp = window.innerWidth / window.innerHeight;
+  if (asp < 0.85) {
+    camera.fov = 66;
+    camYaw = 0.10; camPitch = 0.86; camDist = 6.8;
+  } else {
+    camera.fov = 50;
+    camYaw = 0.10; camPitch = 0.80; camDist = 5.2;
+  }
+  camera.updateProjectionMatrix();
+}
 var camYaw = 0.10, camPitch = 0.80, camDist = 5.2;
+camDefault();
 var camTarget = new THREE.Vector3(0, 0.60, -0.30);
 
 // ================== 조명 (따뜻한 크림빛 실내 + 노을 창빛) ==================
@@ -1664,12 +1677,13 @@ function handleCanvasTap(cx, cy) {
 }
 
 function resetCam() {
-  camYaw = 0.10; camPitch = 0.80; camDist = 5.2;
+  camDefault();
+  camTarget.copy(chars[clientId] ? new THREE.Vector3(chars[clientId].mesh.position.x, 0.88, chars[clientId].mesh.position.z) : camTarget);
 }
 
 window.addEventListener('resize', function() {
   camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  camDefault();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
