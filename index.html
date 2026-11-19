@@ -2243,7 +2243,7 @@ function updateStationNear() {
     var c = chars[id];
     return c.act ? c.act.stId + c.act.actId + c.act.slot : '';
   }).join(',');
-  if (bd < (best && best.reach ? best.reach : 1.3)) {
+  if (bd < (best && best.reach ? best.reach : 1.1)) {
     nearStation = best;
     var k2 = (pr0 ? '|k' : '') + key;
     if (best.id + '|' + k2 !== __barKey) { __barKey = best.id + '|' + k2; showActionBar(best); }
@@ -3110,7 +3110,9 @@ function animate() {
       if (!blockedAt(me.mesh.position.x, mz + vz)) me.mesh.position.z = mz + vz;
       me.mesh.rotation.y = Math.atan2(vx, vz);
     }
-    camTarget.lerp(new THREE.Vector3(me.mesh.position.x, 0.88, me.mesh.position.z), 0.12);
+    var tgtX = Math.max(-1.45, Math.min(1.45, me.mesh.position.x * 0.75));
+    var tgtZ = Math.max(-2.30, Math.min(0.35, me.mesh.position.z * 0.75 - 0.10));
+    camTarget.lerp(new THREE.Vector3(tgtX, 0.88, tgtZ), 0.12);
 
     var now = Date.now();
     if (sbChannel && now - lastSend > 90) {
