@@ -2136,7 +2136,7 @@ function handleCanvasTap(cx, cy) {
     });
     if (best && bd < 1.6) {
       pinnedStation = best;
-      pinnedUntil = performance.now() + 25000;
+      pinnedUntil = performance.now() + 600000;   // 다시 터치하기 전까지 유지
       __barKey = '';
       showActionBar(best);
     }
@@ -3090,6 +3090,7 @@ function animate() {
       var rgtX = Math.cos(camYaw), rgtZ = -Math.sin(camYaw);
       var vx = (fwdX * (-iy) + rgtX * ix) * 0.048;
       var vz = (fwdZ * (-iy) + rgtZ * ix) * 0.048;
+      pinnedStation = null;
       var mx = me.mesh.position.x, mz = me.mesh.position.z;
       if (!blockedAt(mx + vx, mz)) me.mesh.position.x = mx + vx;
       if (!blockedAt(me.mesh.position.x, mz + vz)) me.mesh.position.z = mz + vz;
