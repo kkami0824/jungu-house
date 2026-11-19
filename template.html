@@ -2206,6 +2206,13 @@ function updateStationNear() {
   var me = chars[clientId];
   if (!me) return;
   var p = me.mesh.position;
+  // 터치로 고른 가구(침대 등)는 7초간 그 액션바 유지
+  if (pinnedStation && performance.now() < pinnedUntil) {
+    nearStation = pinnedStation;
+    var pk0 = 'pin|' + pinnedStation.id;
+    if (__barKey !== pk0) { __barKey = pk0; showActionBar(pinnedStation); }
+    return;
+  }
   var pr0 = partnerNear(me, 1.15);
   var best = null, bd = 99;
   stations.forEach(function(st) {
