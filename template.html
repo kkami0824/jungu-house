@@ -938,9 +938,9 @@ addRBox(0.11, 0.03, 0.03, 0.012, mat(0xb98a5d, 0.7), 0.58, 0.17, 0.695, bedG, fa
 addRBox(2.00, 0.24, 1.32, 0.08, cottonMat, 0, 0.44, 0, bedG, true);
 // 이불 (부풀어 오른 볼륨 + 둥근 모서리)
 addRBox(1.62, 0.24, 1.42, 0.10, duvetMat, -0.34, 0.61, 0, bedG, true);
-addSphere(0.74, 0.075, 0.62, 0xfdfaf5, -0.72, 0.72, -0.28, bedG, 0.99);
-addSphere(0.68, 0.07, 0.57, 0xfdfaf5, -0.30, 0.73, 0.26, bedG, 0.99);
-addSphere(0.62, 0.065, 0.52, 0xfdfaf5, -0.02, 0.72, -0.10, bedG, 0.99);
+addSphere(0.42, 0.07, 0.40, 0xfdfaf5, -0.72, 0.71, -0.26, bedG, 0.99);
+addSphere(0.40, 0.065, 0.38, 0xfdfaf5, -0.30, 0.72, 0.24, bedG, 0.99);
+addSphere(0.36, 0.06, 0.34, 0xfdfaf5, -0.02, 0.71, -0.08, bedG, 0.99);
 // 이불 윗단을 살짝 접어 올린 롤
 var duvetRoll = addCyl(0.075, 0.075, 1.36, 0xfdfaf4, 0.44, 0.66, 0, bedG, 14, 0.97);
 duvetRoll.rotation.x = Math.PI / 2;
@@ -1102,7 +1102,7 @@ cush.add(cushFace);
 
 // 소파 앞 스트라이프 슬리퍼
 var slWrap = new THREE.Group();
-slWrap.position.set(1.35, 0, 0.32);
+slWrap.position.set(1.35, 0, 0.08);
 scene.add(slWrap);
 var slipper1 = addBoxT(0.13, 0.045, 0.26, stripeTex, 0, 0.025, -0.14, slWrap, true, 0.95);
 slipper1.rotation.y = 0.15;
@@ -1413,7 +1413,7 @@ var dresserWrap = registerFurniture('TV 서랍장', dresserG);
 
 // 우드 상판 스트라이프 천 트롤리
 var trolleyG = new THREE.Group();
-trolleyG.position.set(0.80, 0, 0.62);
+trolleyG.position.set(0.75, 0, 0.62);
 scene.add(trolleyG);
 addRBox(0.40, 0.04, 0.36, 0.02, mat(0xd7ab78, 0.8), 0, 0.74, 0, trolleyG, true);
 addRBox(0.38, 0.56, 0.34, 0.03, mat(0xfbf8f2, 0.85), 0, 0.44, 0, trolleyG, true);
@@ -2574,7 +2574,7 @@ blk(1.66, -0.47, 2.60, 0.82);
 blk(0.70, -0.32, 1.16, 0.16);
 blk(-1.36, -0.98, -0.20, -0.14);
 // TV 존 (서랍장 · 트롤리 · 서큘레이터 · 램프)
-blk(0.45, 0.38, 1.66, 0.84);
+blk(0.40, 0.38, 1.66, 0.84);
 blk(1.56, -2.98, 2.04, -2.58);
 blk(2.16, -2.98, 2.56, -2.58);
 // 화장실 벽
