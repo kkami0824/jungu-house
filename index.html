@@ -1125,6 +1125,13 @@ var cushFace = new THREE.Mesh(
 cushFace.position.set(0, 0.0, 0.088);
 cush.add(cushFace);
 
+// 초록 벨벳 쿠션 (트리 자수 느낌)
+var greenCush = addRBox(0.36, 0.36, 0.11, 0.06, mat(0x2b4636, 0.9), 0.06, 0.60, 0.02, sofaG, true);
+greenCush.rotation.x = -0.12;
+for (var gi2 = 0; gi2 < 9; gi2++) {
+  addSphere(0.012, 0.012, 0.006, 0xf2e6c0, 0.115, 0.50 + (gi2 % 3) * 0.09, -0.12 + Math.floor(gi2 / 3) * 0.12, sofaG, 0.6);
+}
+
 // 소파 앞 스트라이프 슬리퍼
 var slWrap = new THREE.Group();
 slWrap.position.set(0.85, 0, 0.30);
@@ -1146,8 +1153,7 @@ addSphere(0.21, 0.06, 0.22, 0xfdfaf5, 0, 0.40, 0, stoolG, 0.97);
 var dogG = new THREE.Group();
 dogG.position.set(0, 0.44, 0);
 dogG.rotation.y = -1.15;
-stoolG.add(dogG);
-addSphere(0.15, 0.085, 0.10, 0xd8b489, 0, 0.07, 0, dogG, 0.95);        // 몸통
+stoolG.add(dogG);addSphere(0.15, 0.085, 0.10, 0xd8b489, 0, 0.07, 0, dogG, 0.95);        // 몸통
 addSphere(0.095, 0.085, 0.085, 0xdcb98f, 0.15, 0.10, 0, dogG, 0.95);   // 머리
 addSphere(0.045, 0.035, 0.035, 0xe4c39a, 0.22, 0.075, 0, dogG, 0.95);  // 주둥이
 addSphere(0.016, 0.014, 0.014, 0x3a2d24, 0.245, 0.085, 0, dogG, 0.6);  // 코
@@ -1158,6 +1164,10 @@ addSphere(0.030, 0.070, 0.045, 0xc9a173, 0.145, 0.075, -0.085, dogG, 0.95);
 addSphere(0.045, 0.035, 0.035, 0xd8b489, -0.12, 0.035, 0.06, dogG, 0.95);  // 앞발
 addSphere(0.045, 0.035, 0.035, 0xd8b489, -0.12, 0.035, -0.06, dogG, 0.95);
 addSphere(0.05, 0.03, 0.03, 0xc9a173, -0.17, 0.075, 0, dogG, 0.95);       // 꼬리
+// 강아지 인형은 소파 왼쪽 팔걸이에 (사진처럼)
+sofaG.add(dogG);
+dogG.position.set(-0.04, 0.50, -0.42);
+dogG.rotation.y = Math.PI;
 
 var stoolWrap = registerFurniture('스툴', stoolG);
 // ================== 러그 + 조약돌 테이블 ==================
