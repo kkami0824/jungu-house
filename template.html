@@ -1652,33 +1652,41 @@ function makeChar(role) {
   addSphere(0.056, 0.072, 0.046, skin, -0.286, -0.012, 0.014, headG, 0.78);
   addSphere(0.056, 0.072, 0.046, skin, 0.286, -0.012, 0.014, headG, 0.78);
 
-  // ---------- 눈 (크고 반짝) ----------
-  var eyeMat = new THREE.MeshStandardMaterial({ color: 0x3a2a23, roughness: 0.22, metalness: 0.03 });
-  var eyeL = addMesh(new THREE.SphereGeometry(1, 22, 18), eyeMat, -0.107, -0.012, 0.248, headG, false);
-  eyeL.scale.set(0.074, 0.090, 0.052); eyeL.rotation.y = -0.36;
-  var eyeR = addMesh(new THREE.SphereGeometry(1, 22, 18), eyeMat, 0.107, -0.012, 0.248, headG, false);
-  eyeR.scale.set(0.074, 0.090, 0.052); eyeR.rotation.y = 0.36;
+  // ---------- 눈 (크고 반짝 · 흰자 위에 동그란 홍채) ----------
+  var scleraMat = new THREE.MeshBasicMaterial({ color: 0xfffdfb });
+  var eyeMat = new THREE.MeshStandardMaterial({ color: 0x3d2b23, roughness: 0.2, metalness: 0.03 });
+  var scleraGeo = new THREE.SphereGeometry(1, 20, 16);
+  var irisGeo = new THREE.SphereGeometry(1, 20, 16);
+  var scL = addMesh(scleraGeo, scleraMat, -0.100, -0.020, 0.236, headG, false);
+  scL.scale.set(0.076, 0.090, 0.046); scL.rotation.y = -0.36;
+  var scR = addMesh(scleraGeo, scleraMat, 0.100, -0.020, 0.236, headG, false);
+  scR.scale.set(0.076, 0.090, 0.046); scR.rotation.y = 0.36;
+  var irL = addMesh(irisGeo, eyeMat, -0.100, -0.022, 0.246, headG, false);
+  irL.scale.set(0.062, 0.078, 0.042); irL.rotation.y = -0.36;
+  var irR = addMesh(irisGeo, eyeMat, 0.100, -0.022, 0.246, headG, false);
+  irR.scale.set(0.062, 0.078, 0.042); irR.rotation.y = 0.36;
   // 눈 하이라이트 (반짝)
   var hiMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  var hiL = addMesh(new THREE.SphereGeometry(0.021, 12, 10), hiMat, -0.124, 0.020, 0.292, headG, false);
-  var hiL2 = addMesh(new THREE.SphereGeometry(0.011, 10, 8), hiMat, -0.093, -0.038, 0.288, headG, false);
-  var hiR = addMesh(new THREE.SphereGeometry(0.021, 12, 10), hiMat, 0.124, 0.020, 0.292, headG, false);
-  var hiR2 = addMesh(new THREE.SphereGeometry(0.011, 10, 8), hiMat, 0.093, -0.038, 0.288, headG, false);
+  var hiGeo = new THREE.SphereGeometry(0.018, 12, 10);
+  addMesh(hiGeo, hiMat, -0.116, 0.006, 0.286, headG, false);
+  addMesh(new THREE.SphereGeometry(0.0095, 10, 8), hiMat, -0.082, -0.046, 0.284, headG, false);
+  addMesh(hiGeo, hiMat, 0.116, 0.006, 0.286, headG, false);
+  addMesh(new THREE.SphereGeometry(0.0095, 10, 8), hiMat, 0.082, -0.046, 0.284, headG, false);
   // 눈썹 (부드러운 한 획)
-  var browL = addRBox(0.072, 0.014, 0.012, 0.006, hairMat2, -0.108, 0.098, 0.250, headG, false);
+  var browL = addRBox(0.066, 0.013, 0.012, 0.006, hairMat2, -0.100, 0.075, 0.252, headG, false);
   browL.rotation.set(0, -0.36, -0.10);
-  var browR = addRBox(0.072, 0.014, 0.012, 0.006, hairMat2, 0.108, 0.098, 0.250, headG, false);
+  var browR = addRBox(0.066, 0.013, 0.012, 0.006, hairMat2, 0.100, 0.075, 0.252, headG, false);
   browR.rotation.set(0, 0.36, 0.10);
 
   // 코 (아주 작게)
-  addSphere(0.016, 0.013, 0.013, 0xf7c6b2, 0, 0.045, 0.281, headG, 0.8);
+  addSphere(0.014, 0.011, 0.011, 0xf5c3ae, 0, -0.072, 0.272, headG, 0.8);
 
   // 입 (작고 귀엽게)
   if (isJ) {
-    addSphere(0.032, 0.015, 0.017, 0xbf6a5b, 0, -0.058, 0.272, headG, 0.75);
+    addSphere(0.030, 0.013, 0.015, 0xc4736a, 0, -0.124, 0.256, headG, 0.75);
   } else {
-    addSphere(0.040, 0.045, 0.026, 0xa9506a, 0, -0.062, 0.264, headG, 0.7);
-    addSphere(0.028, 0.020, 0.013, 0xf2909f, 0, -0.080, 0.272, headG, 0.7);
+    addSphere(0.030, 0.030, 0.020, 0xb15c72, 0, -0.126, 0.252, headG, 0.7);
+    addSphere(0.020, 0.014, 0.011, 0xf094a4, 0, -0.136, 0.262, headG, 0.7);
   }
 
   // 볼터치 (몽글 핑크 · 타원은 지오메트리에 미리 구워서 확대해도 모양이 유지되게)
@@ -1687,9 +1695,9 @@ function makeChar(role) {
   var blushMatL = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
   var blushMatR = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
   var bL = addMesh(blushGeo, blushMatL, -0.186, -0.082, 0.186, headG, false);
-  bL.rotation.y = -0.62;
+  bL.position.set(-0.180, -0.098, 0.194); bL.rotation.y = -0.62;
   var bR = addMesh(blushGeo, blushMatR, 0.186, -0.082, 0.186, headG, false);
-  bR.rotation.y = 0.62;
+  bR.position.set(0.180, -0.098, 0.194); bR.rotation.y = 0.62;
 
   // ---------- 머리카락 ----------
   // 머리 윗 덮개 (앞머리는 살짝 들려 얼굴이 보이게)
@@ -1699,23 +1707,25 @@ function makeChar(role) {
   cap.rotation.x = -0.16;
   cap.castShadow = true;
   headG.add(cap);
-  // 뒤통수 머리 (어느 각도에서 봐도 자연스럽게)
-  var backHair = addSphere(0.288, isJ ? 0.238 : 0.268, 0.262, hairCol, 0, -0.035, -0.052, headG, 0.68);
+  // 뒤통수 머리 (얼굴은 가리지 않게 살짝 뒤로)
+  var backHair = addSphere(0.276, 0.262, 0.242, hairCol, 0, -0.048, -0.072, headG, 0.68);
   backHair.castShadow = true;
 
   if (isJ) {
-    // 준구: 가운데 살짝 가른 5:5 앞머리 + 숱 많은 옆머리
-    var bangA = [-0.66, -0.40, -0.15, 0.15, 0.40, 0.66];
+    // 준구: 가운데 살짝 가른 5:5 앞머리 (납작하고 부드러운 갈래)
+    var bangA = [-0.70, -0.46, -0.20, 0.20, 0.46, 0.70];
     for (var bi2 = 0; bi2 < bangA.length; bi2++) {
       var aJ = bangA[bi2];
-      var lkJ = addSphere(0.060, 0.068, 0.052, hairCol, Math.sin(aJ) * 0.272, 0.122 + (Math.abs(aJ) > 0.5 ? -0.012 : 0.012), Math.cos(aJ) * 0.272, headG, 0.68);
-      lkJ.rotation.set(0, aJ, (aJ < 0 ? 1 : -1) * 0.16);
+      var lkJ = addSphere(0.070, 0.058, 0.046, hairCol, Math.sin(aJ) * 0.264, 0.146 + (Math.abs(aJ) > 0.5 ? -0.020 : 0.006), Math.cos(aJ) * 0.264, headG, 0.68);
+      lkJ.rotation.set(0, aJ, (aJ < 0 ? 1 : -1) * 0.20);
     }
     // 가르마 사이로 살짝 솟은 잔머리
-    addSphere(0.052, 0.062, 0.05, hairCol, 0.012, 0.212, 0.238, headG, 0.68).rotation.z = 0.25;
+    addSphere(0.048, 0.056, 0.046, hairCol, 0.010, 0.212, 0.226, headG, 0.68).rotation.z = 0.25;
     // 옆머리 (귀 위로 살짝 덮이게)
-    addSphere(0.074, 0.086, 0.098, hairCol, -0.252, 0.048, 0.02, headG, 0.68);
-    addSphere(0.074, 0.086, 0.098, hairCol, 0.252, 0.048, 0.02, headG, 0.68);
+    addSphere(0.070, 0.082, 0.094, hairCol, -0.250, 0.048, 0.02, headG, 0.68);
+    addSphere(0.070, 0.082, 0.094, hairCol, 0.250, 0.048, 0.02, headG, 0.68);
+    addSphere(0.056, 0.072, 0.070, hairCol, -0.258, -0.052, 0.02, headG, 0.68);
+    addSphere(0.056, 0.072, 0.070, hairCol, 0.258, -0.052, 0.02, headG, 0.68);
     // 맨투맨 후드 (목 뒤로 동글하게)
     addSphere(0.185, 0.098, 0.128, trimCol, 0, 0.452, -0.085, rig, 0.95);
     // 셔츠 카라 (V자로 포개진 두 장)
@@ -1728,15 +1738,15 @@ function makeChar(role) {
     addCyl(0.008, 0.008, 0.11, 0xf2f8ff, -0.052, 0.375, 0.148, rig, 8).rotation.x = 0.1;
     addCyl(0.008, 0.008, 0.11, 0xf2f8ff, 0.052, 0.375, 0.148, rig, 8).rotation.x = 0.1;
   } else {
-    // 지희: 일자 풀뱅 7갈래
-    var bangB = [-0.72, -0.48, -0.24, 0, 0.24, 0.48, 0.72];
+    // 지희: 일자 풀뱅 (납작한 갈래를 촘촘히 붙여 앞머리 끝이 반듯하게)
+    var bangB = [-0.74, -0.44, -0.15, 0.15, 0.44, 0.74];
     for (var bi3 = 0; bi3 < bangB.length; bi3++) {
       var aG = bangB[bi3];
-      var lkG = addSphere(0.056, 0.078, 0.050, hairCol, Math.sin(aG) * 0.274, 0.118, Math.cos(aG) * 0.274, headG, 0.68);
-      lkG.rotation.set(0, aG, Math.sin(aG) * 0.10);
+      var lkG = addSphere(0.076, 0.058, 0.046, hairCol, Math.sin(aG) * 0.264, 0.148, Math.cos(aG) * 0.264, headG, 0.68);
+      lkG.rotation.set(0, aG, 0);
     }
-    // 앞머리 끝 라인을 부드럽게
-    addSphere(0.212, 0.044, 0.075, hairCol, 0, 0.058, 0.238, headG, 0.68);
+    // 앞머리 끝 라인을 부드럽게 (반듯한 일자)
+    addSphere(0.216, 0.034, 0.070, hairCol, 0, 0.094, 0.226, headG, 0.68);
     // 긴 생머리 (옆으로 흘러내림)
     var sdL = addSphere(0.082, 0.235, 0.108, hairSide, -0.256, -0.128, 0.028, headG, 0.7);
     sdL.rotation.z = 0.10;
