@@ -1763,15 +1763,15 @@ function makeChar(role) {
     // 앞머리 끝 라인을 부드럽게 (반듯한 일자)
     addSphere(0.222, 0.030, 0.062, hairCol, 0, 0.086, 0.248, headG, 0.68);
     // 긴 생머리 (옆으로 흘러내림)
-    var sdL = addSphere(0.082, 0.235, 0.108, hairSide, -0.256, -0.128, 0.028, headG, 0.7);
+    var sdL = addSphere(0.092, 0.245, 0.126, hairSide, -0.258, -0.122, 0.012, headG, 0.7);
     sdL.rotation.z = 0.10;
-    var sdR = addSphere(0.082, 0.235, 0.108, hairSide, 0.256, -0.128, 0.028, headG, 0.7);
+    var sdR = addSphere(0.092, 0.245, 0.126, hairSide, 0.258, -0.122, 0.012, headG, 0.7);
     sdR.rotation.z = -0.10;
     addSphere(0.062, 0.115, 0.082, hairSide, -0.276, -0.298, 0.010, headG, 0.7).rotation.z = 0.14;
     addSphere(0.062, 0.115, 0.082, hairSide, 0.276, -0.298, 0.010, headG, 0.7).rotation.z = -0.14;
     // 뒤로 길게 흐르는 머리
-    addRBox(0.40, 0.30, 0.16, 0.075, hairSide, 0, -0.258, -0.10, headG, false);
-    addSphere(0.20, 0.135, 0.085, hairSide, 0, -0.385, -0.075, headG, 0.7);
+    addRBox(0.42, 0.34, 0.17, 0.08, hairSide, 0, -0.262, -0.085, headG, false);
+    addSphere(0.215, 0.150, 0.090, hairSide, 0, -0.398, -0.062, headG, 0.7);
     // 리본 머리핀 (포인트)
     var bowG = new THREE.Group();
     bowG.position.set(0.214, 0.176, 0.132);
