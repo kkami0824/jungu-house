@@ -118,6 +118,7 @@
   }
   #place-panel.show { display: flex; }
   #place-name { font-size: 12.5px; font-weight: 800; color: #4a3b33; }
+  #place-hint { font-size: 11px; color: #8c7e76; font-weight: 600; max-width: 250px; text-align: center; line-height: 1.4; }
   .place-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
   .place-row button {
     border: none; border-radius: 999px; padding: 8px 12px; font-size: 12px;
@@ -280,6 +281,7 @@
 <!-- 가구배치 패널 -->
 <div id="place-panel">
   <div id="place-name">가구를 터치해 고르세요</div>
+  <div id="place-hint">가구를 톡 누르면 선택, 그대로 끌면 옮겨져요</div>
   <div class="place-row">
     <button id="place-rot" onclick="rotateSel()">🔄 90° 회전</button>
     <button onclick="resetFurniture()">↩️ 원래 배치</button>
@@ -2048,7 +2050,10 @@ var pinchDist = 0;
 
 canvas.addEventListener('pointerdown', function(e) {
   if (placeMode) {
-    if (selFurn) { dragging = true; moveSelTo(e.clientX, e.clientY); }
+    pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
+    drag = true; moved = 0; dragging = false;
+    downPos = { x: e.clientX, y: e.clientY };
+    lastPtr = { x: e.clientX, y: e.clientY };
     return;
   }
   pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
@@ -2063,7 +2068,14 @@ canvas.addEventListener('pointerdown', function(e) {
   }
 });
 canvas.addEventListener('pointermove', function(e) {
-  if (placeMode) { if (dragging && selFurn) moveSelTo(e.clientX, e.clientY); return; }
+  if (placeMode) {
+    if (!drag) return;
+    moved += Math.hypot(e.clientX - lastPtr.x, e.clientY - lastPtr.y);
+    lastPtr = { x: e.clientX, y: e.clientY };
+    if (!dragging && moved > 10 && selFurn) dragging = true;
+    if (dragging && selFurn) moveSelTo(e.clientX, e.clientY);
+    return;
+  }
   if (!pointers[e.pointerId]) return;
   pointers[e.pointerId] = { x: e.clientX, y: e.clientY };
   var pts = Object.values(pointers);
@@ -2082,8 +2094,9 @@ canvas.addEventListener('pointermove', function(e) {
 });
 canvas.addEventListener('pointerup', function(e) {
   if (placeMode) {
+    delete pointers[e.pointerId];
     if (dragging) { dragging = false; saveFurniture(); }
-    if (drag && moved < 8) handleCanvasTap(e.clientX, e.clientY);
+    else if (drag && moved < 10) handleCanvasTap(e.clientX, e.clientY);
     drag = false; moved = 0;
     return;
   }
@@ -2108,8 +2121,9 @@ function handleCanvasTap(cx, cy) {
     var fh = ray.intersectObjects(fobjs, false);
     if (fh.length) {
       var o = fh[0].object;
-      while (o && !o.userData.furnName) o = o.parent;
-      if (o) { selectFurn(o); return; }
+      var guard = 0;
+      while (o && !o.userData.furnName && o.parent && guard < 8) { o = o.parent; guard++; }
+      if (o && o.userData.furnName) { selectFurn(o); return; }
     }
     return;
   }
@@ -2600,14 +2614,14 @@ blk(0.55, 2.50, 2.60, 2.62);       // 남쪽 반벽
 // 화장실 안 가구
 blk(0.86, 0.86, 1.36, 1.44);
 blk(2.06, 1.30, 2.60, 1.90);
-blk(1.66, 1.98, 2.60, 2.60);
+blk(1.68, 1.99, 2.54, 2.05);     // 샤워부스 유리 (부스 안은 걸어 들어갈 수 있게)
 // 현관 신발장
 blk(0.60, 2.56, 1.76, 2.96);
 
 var BODY_R = 0.13;
 function blockedAt(x, z) {
   if (x < -2.44 || x > 2.44 || z < -2.84 || z > 2.84) return true;
-  // 문이 닫혀 있으면 화장실 출입구 막힘
+  // 문이 닫혀 있으면 화장실 출입구 막힘 (문 앞에 가면 자동으로 열림)
   if (!doorOpen && x > 0.42 && x < 0.70 && z > 1.50 && z < 2.20) return true;
   for (var i = 0; i < blockers.length; i++) {
     var b = blockers[i];
@@ -2615,6 +2629,50 @@ function blockedAt(x, z) {
   }
   return false;
 }
+// 콜라이더 안에 얼마나 겹쳐 있는지 (0이면 안전한 바닥)
+function penDepth(x, z) {
+  var d = 0;
+  if (x < -2.44) d += (-2.44 - x);
+  if (x > 2.44) d += (x - 2.44);
+  if (z < -2.84) d += (-2.84 - z);
+  if (z > 2.84) d += (z - 2.84);
+  if (!doorOpen && x > 0.42 && x < 0.70 && z > 1.50 && z < 2.20) {
+    d += Math.min(x - 0.42, 0.70 - x, z - 1.50, 2.20 - z) + 0.01;
+  }
+  for (var i = 0; i < blockers.length; i++) {
+    var b = blockers[i];
+    var x1 = b.x1 - BODY_R, x2 = b.x2 + BODY_R, z1 = b.z1 - BODY_R, z2 = b.z2 + BODY_R;
+    if (x > x1 && x < x2 && z > z1 && z < z2) {
+      d += Math.min(x - x1, x2 - x, z - z1, z2 - z) + 0.01;
+    }
+  }
+  return d;
+}
+// 한 걸음: 목적지가 막혔어도 지금보다 덜 겹치면 통과 (끼여도 빠져나올 수 있게)
+function canStep(fromX, fromZ, toX, toZ) {
+  if (!blockedAt(toX, toZ)) return true;
+  var cur = penDepth(fromX, fromZ);
+  if (cur <= 0) return false;
+  return penDepth(toX, toZ) < cur - 1e-5;
+}
+// 가장 가까운 안전한 바닥 찾기
+function nearestFree(x, z, maxR) {
+  if (!blockedAt(x, z)) return { x: x, z: z };
+  var best = null, bd = 1e9, step = 0.05, lim = maxR || 1.8;
+  for (var r = step; r <= lim; r += step) {
+    for (var k = 0; k < 32; k++) {
+      var a = k / 32 * Math.PI * 2;
+      var tx = x + Math.cos(a) * r, tz = z + Math.sin(a) * r;
+      if (tx < -2.44 || tx > 2.44 || tz < -2.84 || tz > 2.84) continue;
+      if (blockedAt(tx, tz)) continue;
+      var dm = Math.hypot(tx - x, tz - z);
+      if (dm < bd) { bd = dm; best = { x: tx, z: tz }; }
+    }
+    if (best) return best;
+  }
+  return best;
+}
+function nearDoorway(x, z) { return x > 0.30 && x < 0.95 && z > 1.35 && z < 2.32; }
 
 // ---------- 스테이션(가구별 상호작용 지점) ----------
 var stations = [];
@@ -2743,7 +2801,15 @@ function startAction(st, a) {
 function stopAction(silent) {
   var me = chars[clientId];
   myAct = null;
-  if (me) me.act = null;
+  if (me) {
+    me.act = null;
+    // 앉기·눕기·샤워를 마치면 가구 속에서 빠져나와 안전한 바닥으로 나온다
+    var p0 = me.mesh.position;
+    if (blockedAt(p0.x, p0.z)) {
+      var f = nearestFree(p0.x, p0.z, 1.9);
+      if (f) me.exitTo = f;
+    }
+  }
   stopFx(clientId);
   stopLoop('water'); stopLoop('sizzle');
   if (!silent) sfx('sit');
@@ -2906,23 +2972,50 @@ var placeMode = false;
 var selFurn = null;
 var dragging = false;
 var dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+// 선택된 가구를 바닥 링으로 표시
+var selRing = new THREE.Mesh(
+  new THREE.RingGeometry(0.44, 0.52, 40),
+  new THREE.MeshBasicMaterial({ color: 0xff8fb2, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false })
+);
+selRing.rotation.x = -Math.PI / 2;
+selRing.visible = false;
+scene.add(selRing);
+function placeSelRing() {
+  if (!placeMode || !selFurn) { selRing.visible = false; return; }
+  selFurn.updateMatrixWorld(true);
+  var bb = new THREE.Box3().setFromObject(selFurn);
+  if (!isFinite(bb.min.x)) { selRing.visible = false; return; }
+  var sz = bb.getSize(new THREE.Vector3());
+  var r = Math.max(0.5, Math.max(sz.x, sz.z) / 2 + 0.12);
+  selRing.position.set((bb.min.x + bb.max.x) / 2, 0.012, (bb.min.z + bb.max.z) / 2);
+  selRing.scale.setScalar(r / 0.48);
+  selRing.material.opacity = 0.5 + Math.sin(performance.now() * 0.005) * 0.2;
+  selRing.visible = true;
+}
 function togglePlaceMode() {
   placeMode = !placeMode;
   document.getElementById('btn-place').classList.toggle('on', placeMode);
   document.getElementById('place-panel').classList.toggle('show', placeMode);
   if (placeMode) {
     myAct && stopAction(true);
+    hideActionBar();
     document.getElementById('place-name').textContent = '가구를 터치해 고르세요';
     document.getElementById('place-rot').style.display = 'none';
+    var hint = document.getElementById('place-hint');
+    if (hint) hint.style.display = 'block';
   } else {
     selFurn = null;
+    selRing.visible = false;
   }
 }
 function selectFurn(g) {
   selFurn = g;
   var f = furn.find(function(x) { return x.g === g; });
-  document.getElementById('place-name').textContent = f ? f.name : '가구';
+  document.getElementById('place-name').textContent = (f ? f.name : '가구') + ' · 끌어서 옮기기';
   document.getElementById('place-rot').style.display = 'inline-block';
+  var hint = document.getElementById('place-hint');
+  if (hint) hint.style.display = 'none';
+  placeSelRing();
   sfx('open');
 }
 function rotateSel() {
@@ -3086,10 +3179,16 @@ function animate() {
   var __dt = Math.min(0.06, (__nowMs - animate.lastT) / 1000);
   animate.lastT = __nowMs;
   if (typeof updateActors === 'function') { updateActors(__dt); updateFx(__dt); updateStationNear(); }
+  if (placeMode) placeSelRing();
 
   // 내 캐릭터 이동
   if (myRole && chars[clientId]) {
     var me = chars[clientId];
+    // 문 앞에 서면 화장실 문이 알아서 열린다
+    if (!doorOpen && nearDoorway(me.mesh.position.x, me.mesh.position.z)) {
+      doorOpen = true;
+      sfx('open');
+    }
     var ix = joyX, iy = joyY;
     if (keys['arrowleft'] || keys['a']) ix -= 1;
     if (keys['arrowright'] || keys['d']) ix += 1;
@@ -3097,6 +3196,29 @@ function animate() {
     if (keys['arrowdown'] || keys['s']) iy += 1;
 
     var len = Math.hypot(ix, iy);
+    // 가구 속에 겹쳐 있으면 안전한 바닥으로 스스로 빠져나온다
+    if (!myAct && !me.exitTo && penDepth(me.mesh.position.x, me.mesh.position.z) > 0) {
+      var uf = nearestFree(me.mesh.position.x, me.mesh.position.z, 2.1);
+      if (uf) me.exitTo = uf;
+    }
+    // 일어나기: 빈 바닥까지 짧게 걸어 나옴
+    if (me.exitTo) {
+      if (len > 0.05) me.exitTo = null;
+      else {
+        var ex = me.exitTo.x, ez = me.exitTo.z;
+        var px0 = me.mesh.position.x, pz0 = me.mesh.position.z;
+        var ed = Math.hypot(ex - px0, ez - pz0);
+        if (ed < 0.04) me.exitTo = null;
+        else {
+          var stp = Math.min(0.075, ed);
+          var nx = px0 + (ex - px0) / ed * stp, nz = pz0 + (ez - pz0) / ed * stp;
+          if (!blockedAt(nx, nz) || penDepth(nx, nz) < penDepth(px0, pz0)) {
+            me.mesh.position.x = nx; me.mesh.position.z = nz;
+            me.mesh.rotation.y = Math.atan2(nx - px0, nz - pz0);
+          } else me.exitTo = null;
+        }
+      }
+    }
     if (len > 0.05) {
       if (myAct) stopAction(true);
       if (len > 1) { ix /= len; iy /= len; }
@@ -3107,8 +3229,8 @@ function animate() {
       var vz = (fwdZ * (-iy) + rgtZ * ix) * 0.048;
       pinnedStation = null;
       var mx = me.mesh.position.x, mz = me.mesh.position.z;
-      if (!blockedAt(mx + vx, mz)) me.mesh.position.x = mx + vx;
-      if (!blockedAt(me.mesh.position.x, mz + vz)) me.mesh.position.z = mz + vz;
+      if (canStep(mx, mz, mx + vx, mz)) me.mesh.position.x = mx + vx;
+      if (canStep(me.mesh.position.x, mz, me.mesh.position.x, mz + vz)) me.mesh.position.z = mz + vz;
       me.mesh.rotation.y = Math.atan2(vx, vz);
     }
     var tgtX = Math.max(-1.45, Math.min(1.45, me.mesh.position.x * 0.75));
