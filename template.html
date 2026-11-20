@@ -1692,8 +1692,8 @@ function makeChar(role) {
   // 볼터치 (몽글 핑크 · 타원은 지오메트리에 미리 구워서 확대해도 모양이 유지되게)
   var blushGeo = new THREE.SphereGeometry(1, 16, 12);
   blushGeo.scale(0.072, 0.048, 0.026);
-  var blushMatL = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
-  var blushMatR = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
+  var blushMatL = new THREE.MeshBasicMaterial({ color: 0xff92ab, transparent: true, opacity: 0.5, depthWrite: false });
+  var blushMatR = new THREE.MeshBasicMaterial({ color: 0xff92ab, transparent: true, opacity: 0.5, depthWrite: false });
   var bL = addMesh(blushGeo, blushMatL, -0.186, -0.082, 0.186, headG, false);
   bL.position.set(-0.180, -0.118, 0.186); bL.rotation.y = -0.62;
   var bR = addMesh(blushGeo, blushMatR, 0.186, -0.082, 0.186, headG, false);
@@ -1804,10 +1804,12 @@ function makeChar(role) {
   }
 
   // 어두운 방에서도 캐릭터가 또렷하고 포근하게 보이도록 살짝 자체 발광
+  var skinTones = [skin, 0xffe0cd, 0xf7c6b2, 0xf5c3ae];
   g.traverse(function(o) {
     if (o.isMesh && o.material && o.material.isMeshStandardMaterial) {
-      o.material.emissive = new THREE.Color(o.material.color);
-      o.material.emissiveIntensity = 0.18;
+      var isSkin = skinTones.indexOf(o.material.color.getHex()) >= 0;
+      o.material.emissive = new THREE.Color(isSkin ? 0xffb98f : o.material.color);
+      o.material.emissiveIntensity = isSkin ? 0.30 : 0.18;
       o.material.needsUpdate = true;
     }
   });
