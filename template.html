@@ -3207,23 +3207,17 @@ function animate() {
     }
     // 일어나기: 빈 바닥까지 짧게 걸어 나옴
     if (me.exitTo) {
-      if (len > 0.05) me.exitTo = null;
+      var ex = me.exitTo.x, ez = me.exitTo.z;
+      var px0 = me.mesh.position.x, pz0 = me.mesh.position.z;
+      var ed = Math.hypot(ex - px0, ez - pz0);
+      if (ed < 0.04) me.exitTo = null;
       else {
-        var ex = me.exitTo.x, ez = me.exitTo.z;
-        var px0 = me.mesh.position.x, pz0 = me.mesh.position.z;
-        var ed = Math.hypot(ex - px0, ez - pz0);
-        if (ed < 0.04) me.exitTo = null;
-        else {
-          var stp = Math.min(0.075, ed);
-          var nx = px0 + (ex - px0) / ed * stp, nz = pz0 + (ez - pz0) / ed * stp;
-          if (!blockedAt(nx, nz) || penDepth(nx, nz) < penDepth(px0, pz0)) {
-            me.mesh.position.x = nx; me.mesh.position.z = nz;
-            me.mesh.rotation.y = Math.atan2(nx - px0, nz - pz0);
-          } else me.exitTo = null;
-        }
+        var stp = Math.min(0.075, ed);
+        var nx = px0 + (ex - px0) / ed * stp, nz = pz0 + (ez - pz0) / ed * stp;
+        me.mesh.position.x = nx; me.mesh.position.z = nz;
+        me.mesh.rotation.y = Math.atan2(nx - px0, nz - pz0);
       }
-    }
-    if (len > 0.05) {
+    } else if (len > 0.05) {
       if (myAct) stopAction(true);
       if (len > 1) { ix /= len; iy /= len; }
       // 카메라 방향 기준 이동
