@@ -1679,14 +1679,14 @@ function makeChar(role) {
   browR.rotation.set(0, 0.36, 0.10);
 
   // 코 (아주 작게)
-  addSphere(0.014, 0.011, 0.011, 0xf5c3ae, 0, -0.072, 0.272, headG, 0.8);
+  addSphere(0.014, 0.011, 0.011, 0xf5c3ae, 0, -0.098, 0.264, headG, 0.8);
 
   // 입 (작고 귀엽게)
   if (isJ) {
-    addSphere(0.030, 0.013, 0.015, 0xc4736a, 0, -0.124, 0.256, headG, 0.75);
+    addSphere(0.030, 0.013, 0.015, 0xc4736a, 0, -0.150, 0.240, headG, 0.75);
   } else {
-    addSphere(0.030, 0.030, 0.020, 0xb15c72, 0, -0.126, 0.252, headG, 0.7);
-    addSphere(0.020, 0.014, 0.011, 0xf094a4, 0, -0.136, 0.262, headG, 0.7);
+    addSphere(0.030, 0.030, 0.020, 0xb15c72, 0, -0.150, 0.236, headG, 0.7);
+    addSphere(0.020, 0.014, 0.011, 0xf094a4, 0, -0.160, 0.246, headG, 0.7);
   }
 
   // 볼터치 (몽글 핑크 · 타원은 지오메트리에 미리 구워서 확대해도 모양이 유지되게)
@@ -1695,9 +1695,9 @@ function makeChar(role) {
   var blushMatL = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
   var blushMatR = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
   var bL = addMesh(blushGeo, blushMatL, -0.186, -0.082, 0.186, headG, false);
-  bL.position.set(-0.180, -0.098, 0.194); bL.rotation.y = -0.62;
+  bL.position.set(-0.180, -0.118, 0.186); bL.rotation.y = -0.62;
   var bR = addMesh(blushGeo, blushMatR, 0.186, -0.082, 0.186, headG, false);
-  bR.position.set(0.180, -0.098, 0.194); bR.rotation.y = 0.62;
+  bR.position.set(0.180, -0.118, 0.186); bR.rotation.y = 0.62;
 
   // ---------- 머리카락 ----------
   // 머리 윗 덮개 (앞머리는 살짝 들려 얼굴이 보이게)
@@ -1802,6 +1802,15 @@ function makeChar(role) {
     bs.position.set(bp[0], bp[1], bp[2]);
     bubbleCloud.add(bs);
   }
+
+  // 어두운 방에서도 캐릭터가 또렷하고 포근하게 보이도록 살짝 자체 발광
+  g.traverse(function(o) {
+    if (o.isMesh && o.material && o.material.isMeshStandardMaterial) {
+      o.material.emissive = new THREE.Color(o.material.color);
+      o.material.emissiveIntensity = 0.18;
+      o.material.needsUpdate = true;
+    }
+  });
 
   g.userData.rig = rig;
   g.userData.parts = {
