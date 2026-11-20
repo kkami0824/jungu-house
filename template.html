@@ -1069,6 +1069,30 @@ addRBox(0.09, 0.16, 0.30, 0.04, boucleMat, -0.21, 0.50, -0.02, chairG, false);
 addRBox(0.09, 0.16, 0.30, 0.04, boucleMat, 0.21, 0.50, -0.02, chairG, false);
 
 var deskWrap = registerFurniture('컴퓨터 책상', deskG);
+// 모니터 선반 + 꼬부기 인형 (사진처럼 책상 위 흰 선반)
+addRBox(0.46, 0.035, 0.22, 0.015, mat(0xfbf8f2, 0.8), 0.04, 1.02, -0.34, deskG, true);
+addBox(0.025, 0.28, 0.025, 0xf0ebe4, -0.13, 0.88, -0.34, deskG, false);
+addBox(0.025, 0.28, 0.025, 0xf0ebe4, 0.22, 0.88, -0.34, deskG, false);
+addRBox(0.44, 0.03, 0.20, 0.012, mat(0xfbf8f2, 0.8), 0.04, 0.86, -0.34, deskG, false);
+addSphere(0.045, 0.045, 0.045, 0xf2b0c0, -0.06, 1.065, -0.34, deskG, 0.8);   // 분홍 피규어
+addBox(0.06, 0.09, 0.06, 0x8ecf7a, 0.04, 1.08, -0.34, deskG, false);          // 초록 피규어
+addSphere(0.04, 0.04, 0.04, 0xf6d78a, 0.15, 1.06, -0.34, deskG, 0.8);         // 노랑 피규어
+// 꼬부기 인형
+var squirtleG = new THREE.Group();
+squirtleG.position.set(0.10, 0.80, 0.10);
+squirtleG.rotation.y = -0.7;
+deskG.add(squirtleG);
+addSphere(0.072, 0.080, 0.062, 0x9fd4ea, 0, 0.08, 0, squirtleG, 0.9);        // 몸통
+addSphere(0.055, 0.052, 0.040, 0xf3f8fb, 0, 0.075, 0.045, squirtleG, 0.9);    // 배
+addSphere(0.040, 0.038, 0.036, 0xf0b98c, 0, 0.185, 0.012, squirtleG, 0.9);    // 얼굴
+addSphere(0.010, 0.010, 0.008, 0x2b2b2b, -0.017, 0.195, 0.045, squirtleG, 0.5);
+addSphere(0.010, 0.010, 0.008, 0x2b2b2b, 0.017, 0.195, 0.045, squirtleG, 0.5);
+addSphere(0.020, 0.016, 0.010, 0x7a5a42, 0, 0.175, 0.048, squirtleG, 0.6);    // 입
+addSphere(0.070, 0.078, 0.050, 0x8a6a4a, 0, 0.085, -0.035, squirtleG, 0.9);   // 등껍질
+addSphere(0.030, 0.030, 0.026, 0x9fd4ea, -0.075, 0.055, 0.02, squirtleG, 0.9); // 팔
+addSphere(0.030, 0.030, 0.026, 0x9fd4ea, 0.075, 0.055, 0.02, squirtleG, 0.9);
+addSphere(0.032, 0.026, 0.034, 0x9fd4ea, -0.04, 0.012, 0.03, squirtleG, 0.9); // 발
+addSphere(0.032, 0.026, 0.034, 0x9fd4ea, 0.04, 0.012, 0.03, squirtleG, 0.9);
 // ================== 소파 (아이보리 2인용 · 부클레) ==================
 var sofaG = new THREE.Group();
 sofaG.position.set(-0.55, 0, -2.45);
@@ -1166,7 +1190,7 @@ scene.add(rug);
 // 화이트 조약돌 테이블
 var __mTable = scene.children.length;
 var tableG = new THREE.Group();
-tableG.position.set(-0.55, 0, -1.05);
+tableG.position.set(-0.55, 0, -0.95);
 scene.add(tableG);
 var topGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.045, 44);
 var tableTop = addMesh(topGeo, mat(0xf4ede2, 0.55), 0, 0.355, 0, tableG);
@@ -1189,7 +1213,7 @@ addSphere(0.022, 0.020, 0.022, 0xd8e5c8, -0.10, 0.56, -0.03, tableG, 0.9);
 addCyl(0.038, 0.038, 0.055, 0xf0e4d0, 0.14, 0.405, -0.02, tableG, 14);
 addSphere(0.011, 0.016, 0.011, 0xffc98a, 0.14, 0.44, -0.02, tableG, 0.5);
 
-var tableWrap = wrapFurniture('소파 테이블', -0.55, -1.05, scene.children.slice(__mTable));
+var tableWrap = wrapFurniture('소파 테이블', -0.55, -0.95, scene.children.slice(__mTable));
 
 // ================== 왼쪽 벽 붙박이장 (창가까지) ==================
 var closetG = new THREE.Group();
@@ -1515,9 +1539,18 @@ makeFrame(0.30, 0.38, 0x1e1e20, photoTexes[2], frameWallX, 1.98, -1.40, -Math.PI
 makeFrame(0.26, 0.34, 0xfdfcf8, photoTexes[1], frameWallX, 2.10, -1.06, -Math.PI / 2);
 makeFrame(0.28, 0.36, 0x1e1e20, photoTexes[3], frameWallX, 1.72, -0.92, -Math.PI / 2);
 makeFrame(0.26, 0.34, 0xfdfcf8, photoTexes[0], frameWallX, 1.95, -0.62, -Math.PI / 2);
+// 마크라메 월행잉 (침대 위)
+var macG = new THREE.Group();
+macG.position.set(frameWallX, 2.02, 0.20);
+macG.rotation.y = -Math.PI / 2;
+scene.add(macG);
+addBox(0.24, 0.018, 0.018, 0xc7a982, 0, 0.11, 0, macG, false);
+for (var mi = 0; mi < 7; mi++) {
+  addBox(0.016, 0.16 + (mi % 3) * 0.05, 0.016, 0xe9dfcc, -0.09 + mi * 0.03, -0.02, 0, macG, false);
+}
+addBox(0.20, 0.012, 0.012, 0xd8c4a6, 0, 0.02, 0, macG, false);
 // 월패드 (인터폰)
-addBox(0.03, 0.20, 0.30, 0xfdfcf8, 2.535, 1.62, -0.18, scene, true);
-addBox(0.012, 0.13, 0.20, 0x35507a, 2.518, 1.62, -0.18, scene, false);
+addBox(0.03, 0.20, 0.30, 0xfdfcf8, 2.535, 1.62, -0.18, scene, true);addBox(0.012, 0.13, 0.20, 0x35507a, 2.518, 1.62, -0.18, scene, false);
 // 보일러 / 에어컨 조절기 2개
 addBox(0.03, 0.13, 0.18, 0xf6f4ee, 2.535, 1.34, 0.02, scene, true);
 addBox(0.012, 0.07, 0.11, 0xcfe0b8, 2.518, 1.35, -0.01, scene, false);
@@ -2606,7 +2639,7 @@ blk(1.30, -2.41, 1.96, -1.65);
 // 소파 · 반달 스툴 · 테이블 (창가)
 blk(-1.19, -2.90, 0.09, -2.00);
 blk(0.07, -2.72, 0.53, -2.26);
-blk(-1.13, -1.48, 0.03, -0.62);
+blk(-1.13, -1.38, 0.03, -0.52);
 // 화이트 서랍장 · 서큘레이터 · 플로어 램프 (창가 오른쪽 코너)
 blk(1.18, -2.81, 1.86, -2.43);
 blk(0.76, -2.74, 1.14, -2.36);
@@ -2726,8 +2759,8 @@ function buildStations() {
   ] });
   station({ id: 'table', name: '소파 테이블', g: tableWrap, reach: 1.4, acts: [
     { id: 'eat', label: '🍚 밥먹기', fx: 'eat', sound: 'nom', slots: [
-      { x: 0.20, z: -1.05, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
-      { x: -1.30, z: -1.05, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
+      { x: 0.20, z: -0.95, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
+      { x: -1.30, z: -0.95, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
     ] }
   ] });
   station({ id: 'coffee', name: '커피머신', g: rollG, acts: [
