@@ -445,7 +445,7 @@ deskLight.position.set(1.72, 0.95, -2.18);
 scene.add(deskLight);
 
 var lampLight = new THREE.PointLight(0xffc98c, 1.2, 4.8, 2);
-lampLight.position.set(0.08, 1.62, 0.36);
+lampLight.position.set(2.35, 1.62, -2.70);
 scene.add(lampLight);
 
 // ================== 재질 / 지오메트리 헬퍼 ==================
@@ -948,7 +948,8 @@ addSphere(180, 32, 70, 0xb3b8ac, 620, -52, -820, city);
 
 // ================== 침대 (창가 · 폭신 이불) ==================
 var bedG = new THREE.Group();
-bedG.position.set(-0.28, 0, -2.28);
+bedG.position.set(1.80, 0, -0.50);
+bedG.rotation.y = Math.PI / 2;   // 오른쪽 벽을 따라 길게 · 머리는 창가(책상) 쪽
 scene.add(bedG);
 // 서랍형 프레임 (둥근 모서리)
 addRBox(2.06, 0.34, 1.38, 0.07, mat(0xc9a074, 0.75), 0, 0.17, 0, bedG, true);
@@ -1036,7 +1037,7 @@ for (var pi = 0; pi < 4; pi++) {
 
 // ================== 책상 + 뽀글이 회전의자 (오른쪽 벽 · 침대와 소파 사이) ==================
 var deskG = new THREE.Group();
-deskG.position.set(2.25, 0, -1.02);
+deskG.position.set(2.25, 0, -2.02);
 scene.add(deskG);
 // 상판 (둥근 모서리)
 addRBox(0.60, 0.05, 0.98, 0.035, mat(0xfaf7f2, 0.8), 0, 0.74, 0, deskG, true);
@@ -1085,7 +1086,8 @@ addRBox(0.09, 0.16, 0.30, 0.04, boucleMat, 0.21, 0.50, -0.02, chairG, false);
 var deskWrap = registerFurniture('컴퓨터 책상', deskG);
 // ================== 소파 (아이보리 2인용 · 부클레) ==================
 var sofaG = new THREE.Group();
-sofaG.position.set(2.11, 0, 0.165);
+sofaG.position.set(-0.55, 0, -2.45);
+sofaG.rotation.y = Math.PI / 2;   // 창가를 등지고 방 안쪽을 바라보게
 scene.add(sofaG);
 // 다리
 addCyl(0.03, 0.03, 0.10, 0x6d5a48, -0.32, 0.05, -0.50, sofaG, 8);
@@ -1125,7 +1127,7 @@ cush.add(cushFace);
 
 // 소파 앞 스트라이프 슬리퍼
 var slWrap = new THREE.Group();
-slWrap.position.set(1.35, 0, 0.08);
+slWrap.position.set(0.85, 0, 0.30);
 scene.add(slWrap);
 var slipper1 = addBoxT(0.13, 0.045, 0.26, stripeTex, 0, 0.025, -0.14, slWrap, true, 0.95);
 slipper1.rotation.y = 0.15;
@@ -1136,7 +1138,7 @@ registerFurniture('슬리퍼', slWrap);
 var sofaWrap = registerFurniture('소파', sofaG);
 // ================== 화이트 스툴(오토만) + 강아지 인형 ==================
 var stoolG = new THREE.Group();
-stoolG.position.set(0.93, 0, -0.08);
+stoolG.position.set(0.30, 0, -2.50);   // 소파 오른쪽 반달 스툴
 scene.add(stoolG);
 addRBox(0.42, 0.36, 0.44, 0.10, cottonMat, 0, 0.19, 0, stoolG, true);
 addSphere(0.21, 0.06, 0.22, 0xfdfaf5, 0, 0.40, 0, stoolG, 0.97);
@@ -1159,17 +1161,17 @@ addSphere(0.05, 0.03, 0.03, 0xc9a173, -0.17, 0.075, 0, dogG, 0.95);       // 꼬
 
 var stoolWrap = registerFurniture('스툴', stoolG);
 // ================== 러그 + 조약돌 테이블 ==================
-var rugTexMat = new THREE.MeshStandardMaterial({map: rugTex, bumpMap: rugTex, bumpScale: 0.006, roughness: 0.99, color: 0xf6ebdc});
-var rug = new THREE.Mesh(new THREE.PlaneGeometry(3.10, 2.50), rugTexMat);
+var rugTexMat = new THREE.MeshStandardMaterial({map: rugTex, bumpMap: rugTex, bumpScale: 0.006, roughness: 0.99, color: 0xfbf8f2});
+var rug = new THREE.Mesh(new THREE.PlaneGeometry(3.02, 2.20), rugTexMat);
 rug.rotation.x = -Math.PI / 2;
-rug.position.set(-0.30, 0.008, -0.62);
+rug.position.set(-0.55, 0.008, -1.15);
 rug.receiveShadow = true;
 scene.add(rug);
 
 // 화이트 조약돌 테이블
 var __mTable = scene.children.length;
 var tableG = new THREE.Group();
-tableG.position.set(-0.78, 0, -0.55);
+tableG.position.set(-0.55, 0, -1.05);
 scene.add(tableG);
 var topGeo = new THREE.CylinderGeometry(0.56, 0.56, 0.045, 44);
 var tableTop = addMesh(topGeo, mat(0xf4ede2, 0.55), 0, 0.355, 0, tableG);
@@ -1192,7 +1194,7 @@ addSphere(0.022, 0.020, 0.022, 0xd8e5c8, -0.10, 0.56, -0.03, tableG, 0.9);
 addCyl(0.038, 0.038, 0.055, 0xf0e4d0, 0.14, 0.405, -0.02, tableG, 14);
 addSphere(0.011, 0.016, 0.011, 0xffc98a, 0.14, 0.44, -0.02, tableG, 0.5);
 
-var tableWrap = wrapFurniture('소파 테이블', -0.78, -0.55, scene.children.slice(__mTable));
+var tableWrap = wrapFurniture('소파 테이블', -0.55, -1.05, scene.children.slice(__mTable));
 
 // ================== 왼쪽 벽 붙박이장 (창가까지) ==================
 var closetG = new THREE.Group();
@@ -1412,7 +1414,8 @@ function toggleTV() {
 
 // TV 아래 화이트 2단 서랍장
 var dresserG = new THREE.Group();
-dresserG.position.set(1.30, 0, 0.58);
+dresserG.position.set(1.52, 0, -2.62);
+dresserG.rotation.y = Math.PI;   // 창가 오른쪽 코너 · 서랍은 방 안쪽으로
 scene.add(dresserG);
 addRBox(0.64, 0.62, 0.34, 0.04, mat(0xfbf8f2, 0.75), 0, 0.31, 0, dresserG, true);
 addRBox(0.58, 0.24, 0.02, 0.01, mat(0xf8f4ec, 0.8), 0, 0.44, -0.17, dresserG, false);
@@ -1433,7 +1436,7 @@ addBox(0.05, 0.05, 0.05, 0x3d3a37, -0.10, 1.06, 0.07, dresserG, false);
 // 서랍장 위 리모컨/소품
 addBox(0.16, 0.025, 0.05, 0x232323, 0.02, 0.635, -0.04, dresserG, false);
 addBox(0.10, 0.035, 0.06, 0xf4f0e8, 0.18, 0.64, -0.04, dresserG, false);
-var dresserWrap = registerFurniture('TV 서랍장', dresserG);
+var dresserWrap = registerFurniture('화이트 서랍장', dresserG);
 
 // 우드 상판 스트라이프 천 트롤리
 var trolleyG = new THREE.Group();
@@ -1466,7 +1469,7 @@ registerFurniture('트롤리', trolleyG);
 
 // 화이트 스탠드 서큘레이터
 var fanG = new THREE.Group();
-fanG.position.set(2.38, 0, -2.78);
+fanG.position.set(0.95, 0, -2.55);
 scene.add(fanG);
 addCyl(0.16, 0.17, 0.03, 0xf6f4f0, 0, 0.02, 0, fanG, 20);
 addCyl(0.045, 0.045, 0.52, 0xf8f6f2, 0, 0.28, 0, fanG, 12);
@@ -1486,7 +1489,7 @@ addBox(0.22, 0.16, 0.10, 0xf8f6f2, 0, -0.14, -0.12, fanHead, false);
 
 // 블랙 플로어 스탠드 조명 (따뜻한 불빛)
 var lampG = new THREE.Group();
-lampG.position.set(1.80, 0, -2.80);
+lampG.position.set(2.35, 0, -2.72);
 scene.add(lampG);
 addCyl(0.16, 0.17, 0.025, 0x1f1f21, 0, 0.012, 0, lampG, 20);
 addCyl(0.016, 0.016, 1.68, 0x232325, 0, 0.86, 0, lampG, 10);
@@ -1719,7 +1722,7 @@ var bubbles = {}; // { id: { text, until } }
 function ensureChar(id, role, name) {
   if (chars[id]) return chars[id];
   var mesh = makeChar(role);
-  mesh.position.set(role === 'jungu' ? -0.62 : 0.02, 0, -1.20);
+  mesh.position.set(role === 'jungu' ? -0.30 : 0.35, 0, -0.75);
   scene.add(mesh);
 
   var el = document.createElement('div');
@@ -2600,19 +2603,21 @@ blk(-2.60, -3.00, 2.60, -2.88); blk(-2.60, 2.88, 2.60, 3.00);
 blk(-2.60, -2.96, -1.97, 0.07);
 blk(-2.60, 0.08, -1.94, 2.96);
 blk(-1.95, 0.30, -1.56, 0.95);     // 이동식 커피 테이블
-// 침대
-blk(-1.36, -2.98, 0.80, -1.56);
-// 책상 + 의자
-blk(1.92, -1.56, 2.60, -0.48);
-blk(1.30, -1.40, 1.96, -0.66);
-// 소파 · 스툴 · 테이블
-blk(1.66, -0.47, 2.60, 0.82);
-blk(0.70, -0.32, 1.16, 0.16);
-blk(-1.36, -0.98, -0.20, -0.14);
-// TV 존 (서랍장 · 트롤리 · 서큘레이터 · 램프)
-blk(0.40, 0.38, 1.66, 0.84);
-blk(1.56, -2.98, 2.04, -2.58);
-blk(2.16, -2.98, 2.56, -2.58);
+// 침대 (오른쪽 벽을 따라 길게)
+blk(1.09, -1.55, 2.52, 0.55);
+// 책상 + 의자 (창가 오른쪽)
+blk(1.92, -2.53, 2.54, -1.51);
+blk(1.30, -2.41, 1.96, -1.65);
+// 소파 · 반달 스툴 · 테이블 (창가)
+blk(-1.19, -2.90, 0.09, -2.00);
+blk(0.07, -2.72, 0.53, -2.26);
+blk(-1.13, -1.48, 0.03, -0.62);
+// 화이트 서랍장 · 서큘레이터 · 플로어 램프 (창가 오른쪽 코너)
+blk(1.18, -2.81, 1.86, -2.43);
+blk(0.76, -2.74, 1.14, -2.36);
+blk(2.16, -2.91, 2.54, -2.53);
+// TV 앞 3단 트롤리
+blk(0.52, 0.42, 0.98, 0.82);
 // 화장실 벽
 blk(0.49, 0.74, 2.60, 0.87);       // TV 가벽
 blk(0.49, 0.80, 0.62, 1.53);       // 서쪽 벽 (문 앞)
@@ -2706,28 +2711,28 @@ function slotRot(st, s) { return (s.rot || 0) + (st.g ? st.g.rotation.y : 0); }
 function buildStations() {
   station({ id: 'bed', name: '침대', g: bedWrap, reach: 1.5, acts: [
     { id: 'sleep', label: '😴 잠자기', fx: 'sleep', sound: 'bed', slots: [
-      { x: -0.34, z: -2.42, rot: -Math.PI / 2, lie: true, y: 0.74 },
-      { x: -0.34, z: -2.02, rot: -Math.PI / 2, lie: true, y: 0.74 }
+      { x: 1.55, z: -1.10, rot: 0, lie: true, y: 0.74 },
+      { x: 2.03, z: -1.10, rot: 0, lie: true, y: 0.74 }
     ] }
   ] });
   station({ id: 'desk', name: '컴퓨터 책상', g: deskWrap, acts: [
     { id: 'game', label: '🎮 게임하기', fx: 'game', sound: 'type', slots: [
-      { x: 1.62, z: -1.04, rot: Math.PI / 2, sit: true, y: 0.46 }
+      { x: 1.62, z: -2.02, rot: Math.PI / 2, sit: true, y: 0.46 }
     ] }
   ] });
   station({ id: 'sofa', name: '소파', g: sofaWrap, acts: [
     { id: 'sofa_sit', label: '🪑 앉기', fx: null, sound: 'sit', slots: [
-      { x: 2.02, z: -0.13, rot: -Math.PI / 2, sit: true, y: 0.46 },
-      { x: 2.02, z: 0.47, rot: -Math.PI / 2, sit: true, y: 0.46 }
+      { x: -0.85, z: -2.39, rot: 0, sit: true, y: 0.46 },
+      { x: -0.25, z: -2.39, rot: 0, sit: true, y: 0.46 }
     ] },
     { id: 'sofa_lie', label: '🛋️ 눕기', fx: 'sleep', sound: 'bed', slots: [
-      { x: 2.02, z: 0.17, rot: 0, lie: true, y: 0.46 }
+      { x: -0.55, z: -2.39, rot: Math.PI / 2, lie: true, y: 0.46 }
     ] }
   ] });
   station({ id: 'table', name: '소파 테이블', g: tableWrap, reach: 1.4, acts: [
     { id: 'eat', label: '🍚 밥먹기', fx: 'eat', sound: 'nom', slots: [
-      { x: 0.02, z: -0.55, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
-      { x: -1.58, z: -0.55, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
+      { x: 0.20, z: -1.05, rot: -Math.PI / 2, sit: true, y: 0.30, food: true },
+      { x: -1.30, z: -1.05, rot: Math.PI / 2, sit: true, y: 0.30, food: true }
     ] }
   ] });
   station({ id: 'coffee', name: '커피머신', g: rollG, acts: [
@@ -3056,7 +3061,7 @@ function saveFurniture() {
   var data = furn.map(function(f) {
     return { k: f.key, x: +f.g.position.x.toFixed(3), z: +f.g.position.z.toFixed(3), r: +f.g.rotation.y.toFixed(3) };
   });
-  try { localStorage.setItem('jungu_furn_v1', JSON.stringify(data)); } catch (e) {}
+  try { localStorage.setItem('jungu_furn_v2', JSON.stringify(data)); } catch (e) {}
   if (sbChannel) sbChannel.send({ type: 'broadcast', event: 'furn', payload: { items: data } });
 }
 function applyFurniture(data) {
@@ -3068,7 +3073,7 @@ function applyFurniture(data) {
 }
 function loadFurniture() {
   try {
-    var s = localStorage.getItem('jungu_furn_v1');
+    var s = localStorage.getItem('jungu_furn_v2');
     if (s) applyFurniture(JSON.parse(s));
   } catch (e) {}
 }
