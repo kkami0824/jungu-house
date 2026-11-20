@@ -1348,6 +1348,7 @@ var showerGlass = new THREE.Mesh(
 );
 showerGlass.position.set(2.10, 0.98, 2.02);
 scene.add(showerGlass);
+stickyTargets.push(showerGlass);   // 샤워부스를 톡 누르면 샤워 메뉴가 뜨게
 addBox(0.03, 1.95, 0.04, 0xc6d3da, 1.70, 0.98, 2.02, scene, false); // 유리 모서리
 addBox(0.03, 1.95, 0.03, 0xc6d3da, 2.50, 0.98, 2.02, scene, false);
 addBox(0.05, 0.62, 0.05, 0xc8d0d8, 2.48, 1.52, 2.30, scene, false);  // 샤워기 바
