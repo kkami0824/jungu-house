@@ -1696,13 +1696,15 @@ function makeChar(role) {
     addSphere(0.028, 0.020, 0.013, 0xf2909f, 0, -0.080, 0.272, headG, 0.7);
   }
 
-  // 볼터치 (몽글 핑크 · 살짝 도톰하게)
+  // 볼터치 (몽글 핑크 · 타원은 지오메트리에 미리 구워서 확대해도 모양이 유지되게)
+  var blushGeo = new THREE.SphereGeometry(1, 16, 12);
+  blushGeo.scale(0.072, 0.048, 0.026);
   var blushMatL = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
   var blushMatR = new THREE.MeshStandardMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.42, depthWrite: false, roughness: 0.9 });
-  var bL = addMesh(new THREE.SphereGeometry(1, 16, 12), blushMatL, -0.186, -0.082, 0.186, headG, false);
-  bL.scale.set(0.072, 0.048, 0.026); bL.rotation.y = -0.62;
-  var bR = addMesh(new THREE.SphereGeometry(1, 16, 12), blushMatR, 0.186, -0.082, 0.186, headG, false);
-  bR.scale.set(0.072, 0.048, 0.026); bR.rotation.y = 0.62;
+  var bL = addMesh(blushGeo, blushMatL, -0.186, -0.082, 0.186, headG, false);
+  bL.rotation.y = -0.62;
+  var bR = addMesh(blushGeo, blushMatR, 0.186, -0.082, 0.186, headG, false);
+  bR.rotation.y = 0.62;
 
   // ---------- 머리카락 ----------
   // 머리 윗 덮개 (앞머리는 살짝 들려 얼굴이 보이게)
