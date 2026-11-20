@@ -2671,7 +2671,13 @@ function startFx(id, kind) {
     if (!c || !c.act) { stopFx(id); return; }
     var p = c.mesh.position;
     if (kind === 'sleep') {
-      addFx('zzz', new THREE.Vector3(p.x + 0.18, p.y + 0.55, p.z));
+      if (c.act && c.act.s && c.act.s.lie) {
+        // 누운 자세면 발이 아니라 머리맡 위로 zzZ 가 피어오르게
+        var ra = c.mesh.rotation.y;
+        addFx('zzz', new THREE.Vector3(p.x - Math.sin(ra) * 0.70, c.mesh.userData.rig.position.y + 0.26, p.z - Math.cos(ra) * 0.70));
+      } else {
+        addFx('zzz', new THREE.Vector3(p.x + 0.18, p.y + 0.55, p.z));
+      }
     } else if (kind === 'game') {
       addFx('note', new THREE.Vector3(p.x + 0.2, p.y + 0.75, p.z));
     } else if (kind === 'eat') {
@@ -2834,7 +2840,7 @@ function buildStations() {
     ] },
     { id: 'sofa_lie', label: '🛋️ 눕기', fx: 'sleep', sound: 'bed', slots: [
       // 소파 길이 방향(동서)으로 머리는 서쪽 팔걸이 쪽
-      { x: -0.07, z: -2.39, rot: 0, lie: true, y: 0.70 }
+      { x: -0.07, z: -2.39, rot: 0, lie: true, y: 0.64 }
     ] }
   ] });
   station({ id: 'table', name: '소파 테이블', g: tableWrap, reach: 1.4, acts: [
