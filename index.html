@@ -1761,7 +1761,7 @@ function makeChar(role) {
       lkG.rotation.set(0, aG, 0);
     }
     // 앞머리 끝 라인을 부드럽게 (반듯한 일자)
-    addSphere(0.216, 0.034, 0.070, hairCol, 0, 0.094, 0.226, headG, 0.68);
+    addSphere(0.222, 0.030, 0.062, hairCol, 0, 0.086, 0.248, headG, 0.68);
     // 긴 생머리 (옆으로 흘러내림)
     var sdL = addSphere(0.082, 0.235, 0.108, hairSide, -0.256, -0.128, 0.028, headG, 0.7);
     sdL.rotation.z = 0.10;
@@ -1777,9 +1777,9 @@ function makeChar(role) {
     bowG.position.set(0.214, 0.176, 0.132);
     bowG.rotation.set(0.18, 0.55, 0.30);
     headG.add(bowG);
-    addSphere(0.050, 0.036, 0.020, 0xf47fa4, -0.046, 0, 0, bowG, 0.85);
-    addSphere(0.050, 0.036, 0.020, 0xf47fa4, 0.046, 0, 0, bowG, 0.85);
-    addSphere(0.026, 0.026, 0.024, 0xee6f97, 0, 0, 0.006, bowG, 0.8);
+    addSphere(0.040, 0.028, 0.016, 0xf47fa4, -0.036, 0, 0, bowG, 0.85);
+    addSphere(0.040, 0.028, 0.016, 0xf47fa4, 0.036, 0, 0, bowG, 0.85);
+    addSphere(0.021, 0.021, 0.019, 0xee6f97, 0, 0, 0.005, bowG, 0.8);
     // 사일러 카라 (크림색 V + 리본)
     var saiMat = mat(trimCol, 0.92);
     var s1 = addRBox(0.185, 0.052, 0.030, 0.016, saiMat, -0.078, 0.440, 0.112, rig, false);
