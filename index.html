@@ -287,6 +287,12 @@
     <button onclick="resetFurniture()">↩️ 원래 배치</button>
     <button onclick="togglePlaceMode()">✅ 완료</button>
   </div>
+  <div class="place-row" id="place-move">
+    <button onclick="nudgeSel(0,-0.15)">🔼</button>
+    <button onclick="nudgeSel(-0.15,0)">◀️</button>
+    <button onclick="nudgeSel(0.15,0)">▶️</button>
+    <button onclick="nudgeSel(0,0.15)">🔽</button>
+  </div>
 </div>
 
 <!-- 조이스틱 -->
@@ -3001,6 +3007,8 @@ function togglePlaceMode() {
     hideActionBar();
     document.getElementById('place-name').textContent = '가구를 터치해 고르세요';
     document.getElementById('place-rot').style.display = 'none';
+    var mv = document.getElementById('place-move');
+    if (mv) mv.style.display = 'none';
     var hint = document.getElementById('place-hint');
     if (hint) hint.style.display = 'block';
   } else {
@@ -3013,6 +3021,8 @@ function selectFurn(g) {
   var f = furn.find(function(x) { return x.g === g; });
   document.getElementById('place-name').textContent = (f ? f.name : '가구') + ' · 끌어서 옮기기';
   document.getElementById('place-rot').style.display = 'inline-block';
+  var mv = document.getElementById('place-move');
+  if (mv) mv.style.display = 'flex';
   var hint = document.getElementById('place-hint');
   if (hint) hint.style.display = 'none';
   placeSelRing();
@@ -3022,6 +3032,15 @@ function rotateSel() {
   if (!selFurn) return;
   selFurn.rotation.y += Math.PI / 2;
   saveFurniture();
+  placeSelRing();
+  sfx('type');
+}
+function nudgeSel(dx, dz) {
+  if (!selFurn) return;
+  selFurn.position.x = Math.max(-1.95, Math.min(1.95, selFurn.position.x + dx));
+  selFurn.position.z = Math.max(-2.95, Math.min(2.95, selFurn.position.z + dz));
+  saveFurniture();
+  placeSelRing();
   sfx('type');
 }
 function resetFurniture() {
